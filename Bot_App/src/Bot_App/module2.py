@@ -5,4 +5,4 @@ class Class1:
         pass
 
     def say_hello(self):
-        return "Hello from Class1 in module2!"
+        print("Hello from Class1 in module2!")
