@@ -4,6 +4,7 @@ import sys
 from dotenv import load_dotenv
 import logging
 from datetime import datetime, timezone, timedelta
+import re
 
 def get_secret(key, FILE_PATH=""):
     try:
