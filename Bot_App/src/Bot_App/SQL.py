@@ -35,3 +35,5 @@ class SQLDatabase:
         cursor.execute(query)
         return cursor.fetchall()
 
+    def commit(self):
+        self.connection.commit()
