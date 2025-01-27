@@ -31,3 +31,6 @@ def get_start_time(delta=1):
     to_date = datetime.now(timezone.utc)
     # Format dates as ISO 8601 strings with milliseconds and timezone
     return to_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+
+def get_current_time():
+    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
