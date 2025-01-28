@@ -41,23 +41,3 @@ class Schwab_client():
 def create_client(app_key, app_secret):
     logging.debug("Initializing Schwabdev client")
     return schwabdev.Client(app_key, app_secret)
-
-def parse_option_description(description):
-    # Regex to capture parts of the string
-    pattern = r"^(.*?) (\d{2}/\d{2}/\d{4}) \$(\d+\.?\d*) (Call|Put)$"
-    match = re.match(pattern, description)
-
-    if match:
-        symbol = match.group(1)  # Symbol can have spaces
-        date = match.group(2)    # Option expiration date
-        strike = match.group(3)  # Strike price
-        option_type = match.group(4)  # Call or Put
-
-        return {
-            "symbol": symbol,
-            "date": date,
-            "strike": strike,
-            "type": option_type
-        }
-    else:
-        raise ValueError("Description format is invalid")
