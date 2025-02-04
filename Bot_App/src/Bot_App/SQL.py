@@ -78,6 +78,20 @@ class SQLDatabase:
         except Exception as e:
             print(f"Table creation error: {e}")
 
+    def get_data(self, query, params=None):
+        if not self.connection:
+            print("Not connected to database")
+            return None
+        try:
+            cursor = self.connection.cursor()
+            if params is not None:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            return cursor.fetchall()
+        except Exception as e:
+            print(f"Query error: {e}")
+            return None
 # Example usage:
 # db = SQLDatabase('mydatabase.db')
 # if db.connect():
