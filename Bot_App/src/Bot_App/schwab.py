@@ -10,7 +10,6 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 class Schwab_client():
     def __init__(self, account, secret):
         self.client = create_client(account, secret)
-        self.test = "test"
 
     def say_hello(self):
         logging.debug("Hello from Schwab_client!")
