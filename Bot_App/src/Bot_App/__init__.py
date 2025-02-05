@@ -2,7 +2,6 @@
 
 # Expose functionality from module1 and module2
 from .schwab import *
-from .position import *
 from .util import *
 from .data import *
 from .SQL import *
