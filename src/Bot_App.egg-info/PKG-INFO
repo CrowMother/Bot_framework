@@ -11,7 +11,6 @@ Classifier: Operating System :: OS Independent
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 Requires-Dist: pandas
-Requires-Dist: logging
 Requires-Dist: schwabdev
 Requires-Dist: typing
 Requires-Dist: python-dotenv

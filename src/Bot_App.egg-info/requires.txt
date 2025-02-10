@@ -1,5 +1,4 @@
 pandas
-logging
 schwabdev
 typing
 python-dotenv
