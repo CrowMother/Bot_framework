@@ -21,7 +21,6 @@ setup(
      install_requires=[
          "pandas",
          "logging",
-         "re",
          "schwabdev",
          "typing",
         "python-dotenv"
