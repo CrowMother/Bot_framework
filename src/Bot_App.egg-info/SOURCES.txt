@@ -1,4 +1,3 @@
-pyproject.toml
 setup.py
 src/Bot_App/SQL.py
 src/Bot_App/__init__.py
