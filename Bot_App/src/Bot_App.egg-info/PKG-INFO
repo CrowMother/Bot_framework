@@ -1,15 +1,22 @@
 Metadata-Version: 2.2
 Name: Bot_App
 Version: 0.1.0
-Summary: A short description of your library.
+Summary: Simplified library for creating account tracking bots
 Home-page: https://github.com/CrowMother/Bot_framework
-Author: Your Name
+Author: Asa
 Author-email: your.email@example.com
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
+Requires-Dist: pandas
+Requires-Dist: sqlite3
+Requires-Dist: logging
+Requires-Dist: re
+Requires-Dist: schwabdev
+Requires-Dist: typing
+Requires-Dist: python-dotenv
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: flake8; extra == "dev"
@@ -20,6 +27,7 @@ Dynamic: description
 Dynamic: description-content-type
 Dynamic: home-page
 Dynamic: provides-extra
+Dynamic: requires-dist
 Dynamic: requires-python
 Dynamic: summary
 
@@ -30,4 +38,5 @@ A short description of your library.
 ## Installation
 
 ```bash
-pip install your_library_name
+pip install Bot_App
+pip install -e .

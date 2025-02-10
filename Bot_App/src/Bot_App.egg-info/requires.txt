@@ -1,3 +1,10 @@
+pandas
+sqlite3
+logging
+re
+schwabdev
+typing
+python-dotenv
 
 [dev]
 pytest
