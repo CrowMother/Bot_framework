@@ -1,7 +1,6 @@
 import schwabdev
 import logging
 from . import util
-import re
 
 from . import data
 
