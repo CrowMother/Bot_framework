@@ -43,6 +43,11 @@ def create_client(app_key, app_secret):
     return schwabdev.Client(app_key, app_secret)
 
 
+def is_open(position):
+    if position["status"] == "OPEN":
+        return True
+    return False
+
 def sort_data_schwab(position):
     """
     Extracts relevant data from a given position and returns it in a neat dictionary.
