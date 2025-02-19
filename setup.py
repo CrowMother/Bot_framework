@@ -25,6 +25,6 @@ setup(
         "python-dotenv"
     ],  # Add runtime dependencies if any
     extras_require={
-        "dev": ["pytest", "flake8"],  # Add development dependencies
+        "dev": ["pytest", "flake8", "gspread", "google.oauth2.service_account", "pandas", "schwabdev"],  # Add development dependencies
     },
 )
