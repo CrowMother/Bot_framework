@@ -11,6 +11,9 @@ import os
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
           'https://www.googleapis.com/auth/drive']
 
+
+# Look into refactoring this into a class for better encapsulation
+
 def insert_data(worksheet, location, data):
     """
     Inserts data into a Google Sheet at the specified location.
@@ -159,3 +162,20 @@ def connect_to_sheet(client, spreadsheet_name, worksheet_name):
         return worksheet
     except Exception as e:
         logging.error(f"An error occurred: {e}")
+
+def format_data(order):
+    row_data = [
+            str(order['underlying_symbol']),
+            str(order['date']),
+            f"{order['strike']} {order['put_call']}",
+            str(order['open_price']),
+            str(order['price']),
+        ]
+    return row_data
+
+
+
+def write_row_at_next_empty_row(worksheet, row_data):
+    row = get_next_empty_row(worksheet, 1)
+    insert_data(worksheet, row, row_data)
+    pass
