@@ -80,20 +80,19 @@ def get_current_time():
     """
     return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
             
-def check_time_of_week(day, hour, minute):
+def check_time_of_week(day, hour):
     """
-    Checks if the current time matches the given day, hour, and minute of the week.
+    Checks if the current time matches the given day and hour of the week.
 
     Args:
         day: int (0-6) representing day of the week (0=Monday, 1=Tuesday, etc)
         hour: int (0-23) representing hour of the day
-        minute: int (0-59) representing minute of the day
-
+        
     Returns:
         bool: True if the current time matches, False otherwise
     """
     now = datetime.now(timezone.utc)
-    if now.weekday() == day and now.hour == hour and now.minute == minute:
+    if now.weekday() == day and now.hour == hour:
         return True
     else:
         return False
