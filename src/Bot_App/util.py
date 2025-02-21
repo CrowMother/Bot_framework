@@ -7,6 +7,20 @@ from datetime import datetime, timezone, timedelta
 import re
 
 def get_secret(key, FILE_PATH=""):
+    """
+    Retrieves the value of a specified environment variable from a .env file.
+
+    Args:
+        key (str): The name of the environment variable to retrieve.
+        FILE_PATH (str, optional): The file path to the .env file. Defaults to an empty string.
+
+    Returns:
+        str or None: The value of the environment variable if found, otherwise None.
+
+    Raises:
+        Exception: If the key is not found or its value is None.
+    """
+
     try:
         load_dotenv(FILE_PATH)
         value = os.getenv(key)
@@ -21,6 +35,18 @@ def get_secret(key, FILE_PATH=""):
 
 
 def get_end_time(delta=1):
+    """
+    Returns the current time minus the given delta hours as a string in ISO 8601 format with milliseconds and timezone.
+
+    Args:
+        delta: int, optional
+            The number of hours to subtract from the current time. Defaults to 1.
+
+    Returns:
+        str
+            The current time minus delta hours as an ISO 8601 string.
+    """
+    
     to_date = datetime.now(timezone.utc)
     from_date = to_date - timedelta(hours=delta)
     
@@ -28,11 +54,30 @@ def get_end_time(delta=1):
     return from_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
      
 def get_start_time(delta=1):
+    """
+    Returns the current time as a string in ISO 8601 format with milliseconds and timezone,
+    adjusted by the given delta hours.
+
+    Args:
+        delta: int, optional
+            The number of hours to subtract from the current time. Defaults to 1.
+
+    Returns:
+        str
+            The current time minus delta hours as an ISO 8601 string.
+    """
     to_date = datetime.now(timezone.utc)
     # Format dates as ISO 8601 strings with milliseconds and timezone
     return to_date.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
 def get_current_time():
+    """
+    Returns the current time as a string in ISO 8601 format with milliseconds and timezone.
+
+    Returns:
+        str
+            The current time as an ISO 8601 string.
+    """
     return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
             
 def check_time_of_week(day, hour, minute):
@@ -47,7 +92,7 @@ def check_time_of_week(day, hour, minute):
     Returns:
         bool: True if the current time matches, False otherwise
     """
-    now = datetime.datetime.now()
+    now = datetime.now(timezone.utc)
     if now.weekday() == day and now.hour == hour and now.minute == minute:
         return True
     else:
