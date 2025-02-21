@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="Bot_App",                       # Library name
-    version="0.1.0",                      # Version
+    version="0.1.1",                      # Version
     author="Asa",
     author_email="your.email@example.com",
     description="Simplified library for creating account tracking bots",
