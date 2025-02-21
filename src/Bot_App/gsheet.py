@@ -165,9 +165,9 @@ def connect_to_sheet(client, spreadsheet_name, worksheet_name):
 
 def format_data(order):
     row_data = [
-            str(order['underlying_symbol']),
+            str(order['symbol']),
             str(order['date']),
-            f"{order['strike']} {order['put_call']}",
+            str(f"{order['strike']} {order['putCall']}"),
             str(order['open_price']),
             str(order['price']),
         ]
@@ -176,6 +176,7 @@ def format_data(order):
 
 
 def write_row_at_next_empty_row(worksheet, row_data):
-    row = get_next_empty_row(worksheet, 1)
-    insert_data(worksheet, row, row_data)
+    row = get_next_empty_row(worksheet, 2)
+    row = f"B{row}"
+    insert_data(worksheet, row, [row_data])
     pass
