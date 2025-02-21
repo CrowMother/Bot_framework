@@ -6,3 +6,7 @@ python-dotenv
 [dev]
 pytest
 flake8
+gspread
+google.oauth2.service_account
+pandas
+schwabdev

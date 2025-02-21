@@ -2,6 +2,7 @@ setup.py
 src/Bot_App/SQL.py
 src/Bot_App/__init__.py
 src/Bot_App/data.py
+src/Bot_App/gsheet.py
 src/Bot_App/schwab.py
 src/Bot_App/util.py
 src/Bot_App/webhook.py
