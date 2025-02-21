@@ -91,8 +91,22 @@ def check_time_of_week(day, hour):
     Returns:
         bool: True if the current time matches, False otherwise
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now()
+    logging.debug(f"Current time: {now.weekday()} {now.hour}")
     if now.weekday() == day and now.hour == hour:
         return True
     else:
         return False
+    
+
+def get_monday_of_current_week():
+    """
+    Returns the date of Monday of the current week.
+
+    Returns:
+        str: The date of Monday of the current week in the format M/D/YY.
+    """
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+    return monday.strftime('%m/%d/%y')
+
