@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 import re
 
-def get_secret(key, FILE_PATH=""):
+def get_secret(key, FILE_PATH="", default=None):
     """
     Retrieves the value of a specified environment variable from a .env file.
 
@@ -30,7 +30,7 @@ def get_secret(key, FILE_PATH=""):
         return value
     except Exception as e:
         logging.error(f"Error getting secret from {FILE_PATH}: {e}")
-        return None
+        return default
     
 
 
