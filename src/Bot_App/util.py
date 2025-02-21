@@ -92,7 +92,7 @@ def check_time_of_week(day, hour):
         bool: True if the current time matches, False otherwise
     """
     now = datetime.now()
-    logging.debug(f"Current time: {now.weekday()} {now.hour}")
+    logging.debug(f"Current time: {now.weekday()} {now.hour} vs {day} {hour}")
     if now.weekday() == day and now.hour == hour:
         return True
     else:
