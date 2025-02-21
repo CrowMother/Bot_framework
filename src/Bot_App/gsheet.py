@@ -176,7 +176,23 @@ def format_data(order):
 
 
 def write_row_at_next_empty_row(worksheet, row_data):
-    row = get_next_empty_row(worksheet, 2)
-    row = f"B{row}"
-    insert_data(worksheet, row, [row_data])
-    pass
+    """
+    Writes a row of data to the next empty row in the Google Sheet.
+
+    Args:
+        worksheet (gspread.Worksheet): The worksheet to write the data to.
+        row_data (list): The data to write to the next empty row.
+
+    Returns:
+        None
+
+    Raises:
+        Exception: If an error occurs while writing the data.
+    """
+    try:
+        row = get_next_empty_row(worksheet, 2)
+        row = f"B{row}"
+        insert_data(worksheet, row, [row_data])
+    except Exception as e:
+        logging.error(f"An error occurred writing row_data to Google Sheet: {e}")
+    
