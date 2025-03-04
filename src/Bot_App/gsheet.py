@@ -213,3 +213,9 @@ def write_row_at_next_empty_row(worksheet, row_data):
     except Exception as e:
         logging.error(f"An error occurred writing row_data to Google Sheet: {e}")
     
+def create_id(order):
+    """
+    Creates a unique ID for an order from execution time and instrument ID.
+    """
+    id = f"{order['open_price']}-{order['price']}-{order['instrumentId']}"
+    return id
