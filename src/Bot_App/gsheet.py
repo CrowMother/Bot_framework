@@ -164,14 +164,31 @@ def connect_to_sheet(client, spreadsheet_name, worksheet_name):
         logging.error(f"An error occurred: {e}")
 
 def format_data(order):
-    row_data = [
-            str(order['symbol']),
-            str(order['date']),
-            str(f"{order['strike']} {order['putCall']}"),
-            str(order['open_price']),
-            str(order['price']),
-        ]
-    return row_data
+    """
+    Formats order data into a list of strings suitable for insertion into a Google Sheet.
+
+    Args:
+        order (dict): A dictionary containing order details, including keys 'symbol',
+                      'date', 'strike', 'putCall', 'open_price', and 'price'.
+
+    Returns:
+        list: A list of strings representing the formatted order data.
+
+    Raises:
+        Exception: If an error occurs during the formatting process, it logs the error.
+    """
+
+    try:
+        row_data = [
+                str(order['symbol']),
+                str(order['date']),
+                str(f"{order['strike']} {order['putCall']}"),
+                str(order['open_price']),
+                str(order['price']),
+            ]
+        return row_data
+    except Exception as e:
+        logging.error(f"An error occurred in format_data: {e}")
 
 
 
@@ -196,3 +213,9 @@ def write_row_at_next_empty_row(worksheet, row_data):
     except Exception as e:
         logging.error(f"An error occurred writing row_data to Google Sheet: {e}")
     
+def create_id(order):
+    """
+    Creates a unique ID for an order from execution time and instrument ID.
+    """
+    id = f"{order['open_price']}-{order['price']}-{order['instrumentId']}"
+    return id
