@@ -29,7 +29,7 @@ def get_secret(key, FILE_PATH="", default=None):
             raise Exception ("Key not found / is None")
         return value
     except Exception as e:
-        logging.error(f"Error getting secret from {FILE_PATH}: {e}")
+        logging.error(f"Error getting secret from {FILE_PATH}: {key}: {e}")
         return default
     
 
