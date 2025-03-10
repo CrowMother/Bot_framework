@@ -1,4 +1,4 @@
-```markdown
+
 # Bot Framework
 
 A Python library designed to facilitate the development of bots.
