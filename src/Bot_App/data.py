@@ -16,30 +16,39 @@ def get_value_from_data(data, target_key):
     :param target_key: The key to search for
     :return: The value associated with the target_key, or None if not found
     """
-    if isinstance(data, dict):
-        for key, value in data.items():
-            if key == target_key:
-                return value
-            if isinstance(value, (dict, list)):
-                result = get_value_from_data(value, target_key)
-                if result is not None:
-                    return result
-    elif isinstance(data, list):
-        for item in data:
-            if isinstance(item, (dict, list)):
-                result = get_value_from_data(item, target_key)
-                if result is not None:
-                    return result
-    return None
+    try:
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if key == target_key:
+                    return value
+                if isinstance(value, (dict, list)):
+                    result = get_value_from_data(value, target_key)
+                    if result is not None:
+                        return result
+        elif isinstance(data, list):
+            for item in data:
+                if isinstance(item, (dict, list)):
+                    result = get_value_from_data(item, target_key)
+                    if result is not None:
+                        return result
+        return None
+    except Exception as e:
+        logging.error(f"Error in get_value_from_data: {e}")
+        return None
 
 def parse_option_description(description, position):
-    # Regex to capture parts of the string
-    pattern = r"^(.*?) (\d{2}/\d{2}/\d{4}) \$(\d+\.?\d*) (Call|Put)$"
-    match = re.match(pattern, description)
+    try:
+        # Regex to capture parts of the string
+        pattern = r"^(.*?) (\d{2}/\d{2}/\d{4}) \$(\d+\.?\d*) (Call|Put)$"
+        match = re.match(pattern, description)
 
-    if match:
-        return match.group(position)
+        if match:
+            return match.group(position)
 
-    else:
-        raise ValueError("Description format is invalid")
+        else:
+            raise ValueError("Description format is invalid")
+
+    except Exception as e:
+        logging.error(f"Error in parse_option_description: {e}")
+        return "N/A"
     
