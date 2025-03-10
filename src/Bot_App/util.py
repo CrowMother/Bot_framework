@@ -110,3 +110,20 @@ def get_monday_of_current_week():
     monday = today - timedelta(days=today.weekday())
     return monday.strftime('%m/%d/%y')
 
+def check_time_of_day(hour, minute=0):
+    """
+    Checks if the current time matches the given hour and minute.
+
+    Args:
+        hour: int (0-23) representing hour of the day
+        minute: int (0-59), optional
+        
+    Returns:
+        bool: True if the current time matches, False otherwise
+    """
+    now = datetime.now()
+    logging.debug(f"Current time: {now.hour} {now.minute} vs {hour} {minute}")
+    if now.hour == hour and now.minute == minute:
+        return True
+    else:    
+        return False
