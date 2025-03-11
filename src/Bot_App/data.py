@@ -31,10 +31,10 @@ def get_value_from_data(data, target_key):
                     result = get_value_from_data(item, target_key)
                     if result is not None:
                         return result
-        return None
+        return "N/A"
     except Exception as e:
         logging.error(f"Error in get_value_from_data: {e}")
-        return None
+        return "N/A"
 
 def parse_option_description(description, position):
     try:

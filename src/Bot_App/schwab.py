@@ -59,7 +59,7 @@ def sort_data_schwab(position):
     putCall = data.get_value_from_data(position, "putCall")
     price = data.get_value_from_data(position, "price")
     instruction = data.get_value_from_data(position, "instruction")
-    comlexOrderStrategy = data.get_value_from_data(position, "complexOrderStrategy")
+    comlexOrderStrategy = data.get_value_from_data(position, "complexOrderStrategyType")
     orderStrategyType = data.get_value_from_data(position, "orderStrategyType")
     legId = data.get_value_from_data(position, "legId")
     instrumentId = data.get_value_from_data(position, "instrumentId")
@@ -218,6 +218,7 @@ def initialize_database(sql, DROP_TABLES=False):
         sql.execute_query("DROP TABLE IF EXISTS orders")
         sql.execute_query("DROP TABLE IF EXISTS positions")
         sql.execute_query("DROP TABLE IF EXISTS open_positions")
+        sql.commit()
 
     # Create `orders` table
     sql.execute_query("""
