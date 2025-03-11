@@ -12,7 +12,7 @@ def format_webhook(order, DISCORD_CHANNEL_ID, MESSAGE_TEMPLATE_OPENING, MESSAGE_
         message (dict): Discord channel ID and message content.
     """
     try:
-        print(order)
+        # print(order)
 
         # Calculate percentage gain if order has an open price
         order["percentage_gain"] = (
@@ -45,7 +45,7 @@ def send_to_discord_webhook(message, webhook_url):
     Logs success or failure of the request.
     """
     try:
-        print(f"Sending order to {webhook_url}:\n {message}")
+        # print(f"Sending order to {webhook_url}:\n {message}")
         response = requests.post(webhook_url, json=message)
         if response.status_code == 200:
             logging.info("Successfully sent order to webhook.")
