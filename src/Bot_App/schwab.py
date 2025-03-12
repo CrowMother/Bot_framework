@@ -6,6 +6,8 @@ from . import data
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
+
 class Schwab_client():
     def __init__(self, account, secret):
         self.client = create_client(account, secret)
@@ -87,6 +89,8 @@ def sort_data_schwab(position):
     }
     return dict
 
+
+
 def sort_schwab_data_dynamically(dataKeys, position):
     """
     Extracts values from a given position based on specified data keys and returns them as a dictionary.
@@ -100,6 +104,9 @@ def sort_schwab_data_dynamically(dataKeys, position):
     for datakey in dataKeys:
         dict[datakey] = data.get_value_from_data(position, datakey)
     return dict
+
+def get_complex_order_strategy_type(position):
+    return data.get_value_from_data(position, "complexOrderStrategyType")
 
 
 def process_closing_orders(sql, orders):
@@ -263,3 +270,35 @@ def initialize_database(sql, DROP_TABLES=False):
     );
     """)
     sql.commit()
+
+
+def get_keys():
+    return ["underlyingSymbol", 
+            "quantity", 
+            "description", 
+            "putCall",
+            "price",  
+            "complexOrderStrategyType", #might not need this at all
+            "orderStrategyType",
+            "instrumentId", 
+            "orderLegCollection"]
+
+
+'''
+for leg in orderLegCollection:
+        leg_data = {
+            "legId": leg["legId"],
+            "symbol": leg["instrument"]["underlyingSymbol"],
+            "quantity": leg["quantity"],
+            "description": leg["instrument"]["description"],
+            "putCall": leg["instrument"]["putCall"],
+            "instruction": leg["instruction"],
+            "positionEffect": leg["positionEffect"],
+            "instrumentId": leg["instrument"]["instrumentId"],
+            "date": data.parse_option_description(leg["instrument"]["description"], 2),
+            "strike": data.parse_option_description(leg["instrument"]["description"], 3)
+        }
+        trade_details["legs"].append(leg_data)
+    
+    return trade_details
+    '''
