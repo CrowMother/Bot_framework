@@ -87,6 +87,19 @@ def sort_data_schwab(position):
     }
     return dict
 
+def sort_schwab_data_dynamically(dataKeys, position):
+    """
+    Extracts values from a given position based on specified data keys and returns them as a dictionary.
+
+    :param dataKeys: A list of keys(str) to extract data for.
+    :param position: The position to extract data from.
+    :return: A dictionary with keys from dataKeys and their corresponding values from the position.
+    """
+
+    dict = {}
+    for datakey in dataKeys:
+        dict[datakey] = data.get_value_from_data(position, datakey)
+    return dict
 
 
 def process_closing_orders(sql, orders):
