@@ -281,24 +281,42 @@ def get_keys():
             "complexOrderStrategyType", #might not need this at all
             "orderStrategyType",
             "instrumentId", 
-            "orderLegCollection"]
+            "orderLegCollection",
+            "instruction"
+            ]
+
+def get_leg_keys():
+    return["orderLegType",
+            "legId",
+            "quantity",
+            "instrument",
+            "instruction",
+            "positionEffect"]
+
+def get_instrument_keys():
+    return ["assetType",
+            "underlyingSymbol",
+            "description",
+            "putCall",
+            "instrumentId",
+            "instruction"]
 
 
-'''
-for leg in orderLegCollection:
-        leg_data = {
-            "legId": leg["legId"],
-            "symbol": leg["instrument"]["underlyingSymbol"],
-            "quantity": leg["quantity"],
-            "description": leg["instrument"]["description"],
-            "putCall": leg["instrument"]["putCall"],
-            "instruction": leg["instruction"],
-            "positionEffect": leg["positionEffect"],
-            "instrumentId": leg["instrument"]["instrumentId"],
-            "date": data.parse_option_description(leg["instrument"]["description"], 2),
-            "strike": data.parse_option_description(leg["instrument"]["description"], 3)
-        }
-        trade_details["legs"].append(leg_data)
-    
-    return trade_details
-    '''
+def split_complex_order_strategy(order):
+    try:
+        if "orderLegCollection" not in order:
+            raise Exception (f"orderLegCollection not found {order}")
+        
+        # Split the complex order strategy into individual orders
+        legs = order["orderLegCollection"]
+
+        for leg in legs:
+            instrumentdata = sort_schwab_data_dynamically(get_instrument_keys(), leg)
+            logging.debug(f"Leg data: {instrumentdata}")
+            #combine instrument data with order data into new order
+            leg_order = {**order, **instrumentdata}
+            logging.debug(f"New order: {leg_order}")
+
+    except Exception as e:
+        logging.error(f"Error splitting complex order strategy: {e}")
+        return
