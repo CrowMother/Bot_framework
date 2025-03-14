@@ -205,7 +205,6 @@ def save_orders_to_db(sql, orders):
         if not orders:
             logging.warning("No orders to save to the database.")
             return
-
         for order in orders:
             # logging.debug(f"Saving order to database...")  # Debugging log
             query = """
@@ -216,11 +215,13 @@ def save_orders_to_db(sql, orders):
                 NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             """
+            if not is_valid_check_order(order):
+                continue
             params = (
                 order['underlyingSymbol'], order['quantity'], order['description'], order['putCall'],
                 order['date'], order['strike'], order['price'], order['instruction'],
-                order['complexOrderStrategy'], order['orderStrategyType'],
-                order['legId'], order['instrumentId'], order['executionTime']
+                order['complexOrderStrategyType'], order['orderStrategyType'],
+                order['instruction'], order['instrumentId'], order['enteredTime']
             )
 
         sql.execute_query(query, params)
@@ -283,7 +284,8 @@ def get_keys():
             "orderStrategyType",
             "instrumentId", 
             "orderLegCollection",
-            "instruction"
+            "instruction",
+            "enteredTime",
             ]
 
 def get_complex_keys():
@@ -294,7 +296,7 @@ def get_complex_keys():
             "price",
             "complexOrderStrategyType",
             "orderStrategyType",
-            "legId"]
+            "enteredTime"]
 
 def get_flatten_keys():
     return ["underlyingSymbol",
@@ -305,6 +307,7 @@ def get_flatten_keys():
             "complexOrderStrategyType",
             "orderStrategyType",
             "legId",
+            "enteredTime",
             "instrumentId"]
 
 def get_leg_keys():
@@ -313,6 +316,7 @@ def get_leg_keys():
             "quantity",
             "instrument",
             "instruction",
+            "orderLegCollection",
             "positionEffect"]
 
 def get_instrument_keys():
@@ -321,13 +325,15 @@ def get_instrument_keys():
             "description",
             "putCall",
             "instrumentId",
-            "instruction"]
+            "instruction",
+            "legId",]
 
 
 def split_complex_order_strategy(order):
     try:
         if "orderLegCollection" not in order:
-            raise Exception (f"orderLegCollection not found {order}")
+            logging.debug("orderLegCollection not found in order")
+            return
         # get the keys that matter for all these from order
         orderdata = sort_schwab_data_dynamically(get_complex_keys(), order)
 
@@ -370,3 +376,10 @@ def split_description(order):
     except Exception as e:
         logging.error(f"Error formatting description: {e}")
         return
+    
+def is_valid_check_order(order):
+    #check if order contains any empty values
+    for key, value in order.items():
+        if value == None:
+            return False
+    return True
