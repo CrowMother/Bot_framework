@@ -41,6 +41,7 @@ class trade:
         return result
 
 def get_value_from_data(data, target_key):
+    
     """
     Recursively searches through a nested dictionary or list to find the value
     associated with the given key.
@@ -49,25 +50,30 @@ def get_value_from_data(data, target_key):
     :param target_key: The key to search for
     :return: The value associated with the target_key, or None if not found
     """
-    try:
-        if isinstance(data, dict):
-            for key, value in data.items():
-                if key == target_key:
-                    return value
-                if isinstance(value, (dict, list)):
-                    result = get_value_from_data(value, target_key)
-                    if result is not None:
-                        return result
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, (dict, list)):
-                    result = get_value_from_data(item, target_key)
-                    if result is not None:
-                        return result
-        return "N/A"
-    except Exception as e:
-        logging.error(f"Error in get_value_from_data: {e}")
-        return "N/A"
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key == target_key:
+                return value
+            elif isinstance(value, (dict, list)):
+                result = get_value_from_data(value, target_key)
+                if result is not None:
+                    return result
+    elif isinstance(data, list):
+        for item in data:
+            if isinstance(item, (dict, list)):
+                result = get_value_from_data(item, target_key)
+                if result is not None:
+                    return result
+
+    # If we get here, not found:
+    return None
+
+def get_value_or_na(data, target_key):
+    # Wrapper that returns 'N/A' if the recursion didn't find anything
+    result = get_value_from_data(data, target_key)
+    return result if result is not None else "N/A"
+
 
 def parse_option_description(description, position):
     try:

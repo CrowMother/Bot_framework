@@ -201,30 +201,32 @@ def save_orders_to_db(sql, orders):
     """
     Saves the given list of orders to the `orders` table in the database.
     """
-    if not orders:
-        logging.warning("No orders to save to the database.")
-        return
+    try:
+        if not orders:
+            logging.warning("No orders to save to the database.")
+            return
+        for order in orders:
+            # logging.debug(f"Saving order to database...")  # Debugging log
+            query = """
+            INSERT INTO orders (
+                order_id, symbol, quantity, description, putCall, date, strike, price, instruction,
+                complexOrderStrategy, orderStrategyType, legId, instrumentId, executionTime
+            ) VALUES (
+                NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
+            """
+            if not is_valid_check_order(order):
+                continue
+            params = (
+                order['underlyingSymbol'], order['quantity'], order['description'], order['putCall'],
+                order['date'], order['strike'], order['price'], order['instruction'],
+                order['complexOrderStrategyType'], order['orderStrategyType'],
+                order['instruction'], order['instrumentId'], order['enteredTime']
+            )
 
-    for order in orders:
-        logging.debug(f"Saving order to database...")  # Debugging log
-        query = """
-        INSERT INTO orders (
-            order_id, symbol, quantity, description, putCall, date, strike, price, instruction,
-            complexOrderStrategy, orderStrategyType, legId, instrumentId, executionTime
-        ) VALUES (
-            NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-        )
-        """
-        params = (
-            order['symbol'], order['quantity'], order['description'], order['putCall'],
-            order['date'], order['strike'], order['price'], order['instruction'],
-            order['complexOrderStrategy'], order['orderStrategyType'],
-            order['legId'], order['instrumentId'], order['executionTime']
-        )
-        try:
-            sql.execute_query(query, params)
-        except Exception as e:
-            logging.error(f"Error saving order to database: {e}")
+        sql.execute_query(query, params)
+    except Exception as e:
+        logging.error(f"Error saving order to database: {e}")
 
     sql.commit()  # Commit changes to ensure data is saved
     logging.info(f"Successfully saved {len(orders)} orders to the database.")
@@ -281,24 +283,103 @@ def get_keys():
             "complexOrderStrategyType", #might not need this at all
             "orderStrategyType",
             "instrumentId", 
-            "orderLegCollection"]
+            "orderLegCollection",
+            "instruction",
+            "enteredTime",
+            ]
+
+def get_complex_keys():
+    return ["underlyingSymbol",
+            "quantity",
+            "description",
+            "putCall",
+            "price",
+            "complexOrderStrategyType",
+            "orderStrategyType",
+            "enteredTime"]
+
+def get_flatten_keys():
+    return ["underlyingSymbol",
+            "quantity",
+            "description",
+            "putCall",
+            "price",
+            "complexOrderStrategyType",
+            "orderStrategyType",
+            "legId",
+            "enteredTime",
+            "instrumentId"]
+
+def get_leg_keys():
+    return["orderLegType",
+            "legId",
+            "quantity",
+            "instrument",
+            "instruction",
+            "orderLegCollection",
+            "positionEffect"]
+
+def get_instrument_keys():
+    return ["assetType",
+            "underlyingSymbol",
+            "description",
+            "putCall",
+            "instrumentId",
+            "instruction",
+            "legId",]
 
 
-'''
-for leg in orderLegCollection:
-        leg_data = {
-            "legId": leg["legId"],
-            "symbol": leg["instrument"]["underlyingSymbol"],
-            "quantity": leg["quantity"],
-            "description": leg["instrument"]["description"],
-            "putCall": leg["instrument"]["putCall"],
-            "instruction": leg["instruction"],
-            "positionEffect": leg["positionEffect"],
-            "instrumentId": leg["instrument"]["instrumentId"],
-            "date": data.parse_option_description(leg["instrument"]["description"], 2),
-            "strike": data.parse_option_description(leg["instrument"]["description"], 3)
-        }
-        trade_details["legs"].append(leg_data)
+def split_complex_order_strategy(order):
+    try:
+        if "orderLegCollection" not in order:
+            logging.debug("orderLegCollection not found in order")
+            return
+        # get the keys that matter for all these from order
+        orderdata = sort_schwab_data_dynamically(get_complex_keys(), order)
+
+        # Split the complex order strategy into individual orders
+        legs = order["orderLegCollection"]
+
+        legDataList = []
+        for leg in legs:
+            instrumentdata = sort_schwab_data_dynamically(get_instrument_keys(), leg)
+            logging.debug(f"Leg data: {instrumentdata}")
+            #combine instrument data with order data into new order
+            legdata = {**orderdata, **instrumentdata}
+            logging.debug(f"Leg data: {legdata}")
+            legDataList.append(legdata)
+        return legDataList
+            
+
+    except Exception as e:
+        logging.error(f"Error splitting complex order strategy: {e}")
+        return
     
-    return trade_details
-    '''
+
+def flatten_data(order):
+    try:
+        order = sort_schwab_data_dynamically(get_flatten_keys(), order)
+        return order
+    except Exception as e:
+        logging.error(f"Error flattening data: {e}")
+        return
+
+def split_description(order):
+    try:
+        description = order["description"]
+        if not description:
+            return order
+        order["date"] = data.parse_option_description(description, 2)
+        order["strike"] = data.parse_option_description(description, 3)
+        return order
+    
+    except Exception as e:
+        logging.error(f"Error formatting description: {e}")
+        return
+    
+def is_valid_check_order(order):
+    #check if order contains any empty values
+    for key, value in order.items():
+        if value == None:
+            return False
+    return True
