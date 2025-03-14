@@ -26,10 +26,10 @@ def get_secret(key, FILE_PATH="", default=None):
         value = os.getenv(key)
         if value == None:
             #throw error if key not found
-            raise Exception ("Key not found / is None")
+            logging.debug(f"Key {key} not found / is None")
         return value
     except Exception as e:
-        logging.error(f"Error getting secret from {FILE_PATH}: {key}: {e}")
+        logging.error(f"Get_secret() Error getting secret from {FILE_PATH}: {key}: {e}")
         return default
     
 
