@@ -224,7 +224,7 @@ def save_orders_to_db(sql, orders):
                 order['instruction'], order['instrumentId'], order['enteredTime']
             )
 
-        sql.execute_query(query, params)
+            sql.execute_query(query, params)
     except Exception as e:
         logging.error(f"Error saving order to database: {e}")
 
