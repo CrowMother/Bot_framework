@@ -90,7 +90,7 @@ class SQLDatabase:
                 cursor.execute(query)
             return cursor.fetchall()
         except Exception as e:
-            print(f"Query error: {e}")
+            print(f"SQL get_data error: {e}")
             return None
 # Example usage:
 # db = SQLDatabase('mydatabase.db')

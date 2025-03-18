@@ -145,7 +145,7 @@ def process_closing_orders(sql, orders):
 
                 # Add to closed orders
                 closed_orders.append({
-                    "symbol": order["symbol"],
+                    "symbol": order["underlyingSymbol"],
                     "quantity": processed_quantity,
                     "description": order["description"],
                     "putCall": order["putCall"],
@@ -153,9 +153,8 @@ def process_closing_orders(sql, orders):
                     "strike": order["strike"],
                     "price": order["price"],
                     "instruction": order["instruction"],
-                    "complexOrderStrategy": order["complexOrderStrategy"],
+                    "complexOrderStrategy": order["complexOrderStrategyType"],
                     "orderStrategyType": order["orderStrategyType"],
-                    "legId": order["legId"],
                     "instrumentId": order["instrumentId"],
                     "executionTime": execution_time,
                     "open_quantity": open_quantity,
@@ -188,14 +187,16 @@ def populate_open_positions(sql, orders):
     """
     Populates the `open_positions` table with BUY_TO_OPEN and SELL_TO_OPEN orders.
     """
-    for order in orders:
-        if order['instruction'] in ["BUY_TO_OPEN", "SELL_TO_OPEN"]:
-            sql.execute_query(
-                "INSERT INTO open_positions VALUES (?, ?, ?, ?, ?)",
-                (order['executionTime'], order['instrumentId'], order['quantity'], order['price'], order['symbol'])
-            )
-    sql.commit()
-
+    try:
+        for order in orders:
+            if order['instruction'] in ["BUY_TO_OPEN", "SELL_TO_OPEN"]:
+                sql.execute_query(
+                    "INSERT INTO open_positions VALUES (?, ?, ?, ?, ?)",
+                    (order['enteredTime'], order['instrumentId'], order['quantity'], order['price'], order['underlyingSymbol'])
+                )
+        sql.commit()
+    except Exception as e:
+        logging.error(f"Error populating open positions: {e}")
 
 def save_orders_to_db(sql, orders):
     """
