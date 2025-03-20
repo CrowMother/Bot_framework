@@ -127,3 +127,24 @@ def check_time_of_day(hour, minute=0):
         return True
     else:    
         return False
+    
+
+def check_file_changed(file_path, last_modified=None):
+    """
+    Checks if the file has been modified since the last time it was checked.
+
+    Args:
+        file_path: str, the path to the file to check.
+        last_modified: datetime, the last time the file was modified. Defaults to None."
+        "    
+    Returns:
+        bool: True if the file has been modified, False otherwise.
+    """
+    try:
+        stat = os.stat(file_path)
+        if last_modified is None or stat.st_mtime > last_modified:
+            return True
+        else:
+            return False
+    except Exception as e:
+        logging.error(f"Error checking file {file_path}: {e}")
