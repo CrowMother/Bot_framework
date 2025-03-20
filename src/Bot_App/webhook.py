@@ -53,3 +53,4 @@ def send_to_discord_webhook(message, webhook_url):
             logging.error(f"Failed to send order to webhook. Status code: {response.status_code}")
     except Exception as e:
         logging.error(f"Error sending data to webhook: {str(e)}")
+        print("done")
