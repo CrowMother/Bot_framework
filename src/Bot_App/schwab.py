@@ -1,6 +1,8 @@
 import schwabdev
 import logging
 from . import util
+import hashlib
+import datetime
 
 from . import data
 
@@ -384,3 +386,68 @@ def is_valid_check_order(order):
         if value == None:
             return False
     return True
+
+
+def generate_order_id(order):
+    """
+    Generates a unique identifier for an order based on the underlying symbol and the symbols of the
+    legs in the orderLegCollection. The identifier is a SHA-256 hash of the concatenated strings.
+
+    Args:
+        order (dict): A dictionary containing the order details.
+
+    Returns:
+        str: A unique identifier for the order.
+    """
+    leg_symbols = sorted(
+        [leg['instrument']['symbol'] for leg in order['orderLegCollection']]
+    )
+    raw_string = order['underlyingSymbol'] + ''.join(leg_symbols) + order.get('complexOrderStrategyType', '')
+    return hashlib.sha256(raw_string.encode()).hexdigest()
+
+def extract_and_normailze_legs(order):
+    """
+    Extracts and normalizes the legs of an order, generating a unique identifier for each leg.
+
+    Args:
+        order (dict): A dictionary containing order details, including the "orderLegCollection" key
+                      which holds a list of legs to be processed.
+
+    Returns:
+        list: A list of dictionaries, each representing a normalized leg with keys such as "order_id",
+              "leg_id", "order_leg_type", "symbol", "cusip", "description", "instrument_id", "type",
+              "put_call", "underlying_symbol", "instruction", "position_effect", and "quantity".
+    """
+    try:
+        # Generate unique identifier for the order
+        order_id = generate_order_id(order)
+
+        # Extract and normalize legs
+        legs = []
+        for leg in order["orderLegCollection"]:
+            instrument = leg["instrument"]
+            legs.append({
+                "order_id": order_id,
+                "leg_id": leg.get("legId"),
+                "order_leg_type": leg.get("orderLegType"),
+                "symbol": instrument.get("symbol"),
+                "cusip": instrument.get("cusip"),
+                "description": instrument.get("description"),
+                "instrument_id": instrument.get("instrumentId"),
+                "type": instrument.get("type"),
+                "put_call": instrument.get("putCall"),
+                "underlying_symbol": instrument.get("underlyingSymbol"),
+                "instruction": leg.get("instruction"),
+                "position_effect": leg.get("positionEffect"),
+                "quantity": leg.get("quantity"),
+                "strategy_type": order.get("complexOrderStrategyType"),
+                "order_strategy_type": order.get("orderStrategyType"),
+                "order_price": order.get("price"),
+                "order_quantity": order.get("quantity")
+            })
+
+        return legs
+
+    except Exception as e:
+        logging.error(f"Error extracting and normalizing legs: {e}")
+        return []
