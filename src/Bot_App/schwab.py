@@ -427,23 +427,23 @@ def extract_and_normailze_legs(order):
         for leg in order["orderLegCollection"]:
             instrument = leg["instrument"]
             legs.append({
-                "order_id": order_id,
-                "leg_id": leg.get("legId"),
-                "order_leg_type": leg.get("orderLegType"),
+                "orderId": order_id,
+                "legId": leg.get("legId"),
+                "orderLegType": leg.get("orderLegType"),
                 "symbol": instrument.get("symbol"),
                 "cusip": instrument.get("cusip"),
                 "description": instrument.get("description"),
-                "instrument_id": instrument.get("instrumentId"),
+                "instrumentId": instrument.get("instrumentId"),
                 "type": instrument.get("type"),
-                "put_call": instrument.get("putCall"),
-                "underlying_symbol": instrument.get("underlyingSymbol"),
+                "putCall": instrument.get("putCall"),
+                "underlyingSymbol": instrument.get("underlyingSymbol"),
                 "instruction": leg.get("instruction"),
-                "position_effect": leg.get("positionEffect"),
+                "positionEffect": leg.get("positionEffect"),
                 "quantity": leg.get("quantity"),
-                "strategy_type": order.get("complexOrderStrategyType"),
-                "order_strategy_type": order.get("orderStrategyType"),
-                "order_price": order.get("price"),
-                "order_quantity": order.get("quantity")
+                "strategyType": order.get("complexOrderStrategyType"),
+                "orderStrategyType": order.get("orderStrategyType"),
+                "orderPrice": order.get("price"),
+                "orderQuantity": order.get("quantity")
             })
 
         return legs
