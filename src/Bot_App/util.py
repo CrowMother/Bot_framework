@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import logging
 from datetime import datetime, timezone, timedelta
 import re
+from typing import List, Dict, Any
 
 def get_secret(key, FILE_PATH="", default=None):
     """
@@ -165,5 +166,14 @@ def get_file_last_modified(file_path):
     except Exception as e:
         logging.error(f"Error getting last modified time of file {file_path}: {e}")
 
+def flatten_dict(d: Dict, parent_key: str = '', sep: str = '.') -> Dict:
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
     
