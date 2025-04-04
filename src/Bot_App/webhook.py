@@ -1,56 +1,107 @@
 import requests
 import logging
+import sqlite3
+import json
 
-def format_webhook(order, DISCORD_CHANNEL_ID, MESSAGE_TEMPLATE_OPENING, MESSAGE_TEMPLATE_CLOSING):
+from . import data
+
+
+def post_to_discord(order_json, DISCORD_WEBHOOK_URL):
+    content = format_discord_message(order_json)
+    payload = {
+        "channel": "1337475225650200576",
+        "content": content}
+
+    response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
+    return response.status_code == 204 or response.status_code == 200
+
+def format_discord_message(order):
     """
-    Formats the order data for sending to the webhook dynamically based on an environment variable template.
+    Format a Schwab order dictionary into a string suitable for posting to Discord.
 
-    Args:
-        order (dict): The order data to be formatted.
-
-    Returns:
-        message (dict): Discord channel ID and message content.
+    :param order: A dictionary of a Schwab order
+    :return: A string representation of the order
     """
-    try:
-        # print(order)
+    legs = order.get("orderLegCollection", [])
+    price = order.get("price", "?")
+    position_effects = []
+    leg_lines = []
 
-        # Calculate percentage gain if order has an open price
-        order["percentage_gain"] = (
-            f"{((order['orderPrice'] - order['open_price']) / order['open_price'] * 100):.2f}%" 
-            if "open_price" in order else "N/A"
-        )
+    for leg in legs:
+        instruction = leg.get("instruction", "UNKNOWN")
+        position_effect = leg.get("positionEffect", "")
+        position_effect = get_open_close_symbol(position_effect)
+        instrument = leg.get("instrument", {})
+        symbol = instrument.get("symbol", "???").split(" ")[0]
+        description = instrument.get("description", "")
+        # Extract important parts of the option description
+        # date is the first part of the description
+        # strike is the second part
+        # put or call is the fourth part
+        date = data.parse_option_description(description, 2)
+        strike = data.parse_option_description(description, 3)
+        put_call = data.parse_option_description(description, 4)
+#------------------------------------------------------------------------------
+#   # format message for each leg
+        leg_lines.append(f"## {symbol}")
+        # Add the symbol and strike price
+        leg_lines.append(f"> **{date} ${strike} {put_call}**")
+        position_effects.append(position_effect)
+    # format message for the order
+    effect_summary = ', '.join(set(position_effects)) or "UNKNOWN"
+    body = "\n".join(leg_lines)
 
-        # Determine which message template to use
-        if order['instruction'] in ["SELL_TO_CLOSE", "BUY_TO_CLOSE"]:
-            message_content = MESSAGE_TEMPLATE_CLOSING.format(**order)
-        else:
-            message_content = MESSAGE_TEMPLATE_OPENING.format(**order)
+    gain_line = ""
+    if any(pe == "CLOSING 🔴" for pe in position_effects):
+        opening_price = find_opening_price(order)
+        if opening_price and price:
+            pct_change = ((price - opening_price) / opening_price) * 100
+            emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend: "
+            gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
 
-        message = {
-            "channel": DISCORD_CHANNEL_ID,
-            "content": message_content
-        }
+    return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
+#-----------------------------------------------------------------------------
 
-        return message
+def get_open_close_symbol(position_effect):
+    if position_effect == "OPENING":
+        return f"{position_effect} 🟢"
+    elif position_effect == "CLOSING":
+        return f"{position_effect} 🔴"
+    else:
+        return f"{position_effect} 🟡"
+    
+def find_opening_price(order, db_path="orders.db"):
+    leg = order.get("orderLegCollection", [{}])[0]
+    instrument = leg.get("instrument", {})
+    symbol = instrument.get("symbol", None)
+    entry_time = order.get("enteredTime", None)
 
-    except KeyError as e:
-        logging.error(f"Missing key in order data: {e}")
-    except Exception as e:
-        logging.error(f"Error formatting webhook message: {str(e)}")
+    if not symbol or not entry_time:
+        return None
 
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-def send_to_discord_webhook(message, webhook_url):
-    """
-    Sends the given order to the specified webhook URL.
-    Logs success or failure of the request.
-    """
-    try:
-        # print(f"Sending order to {webhook_url}:\n {message}")
-        response = requests.post(webhook_url, json=message)
-        if response.status_code == 200:
-            logging.info("Successfully sent order to webhook.")
-        else:
-            logging.error(f"Failed to send order to webhook. Status code: {response.status_code}")
-    except Exception as e:
-        logging.error(f"Error sending data to webhook: {str(e)}")
-        print("done")
+    cursor.execute("""
+        SELECT full_json FROM schwab_orders
+        WHERE ticker = ? AND position_effect = 'OPENING'
+        AND entered_time < ?
+        ORDER BY entered_time DESC
+        LIMIT 1
+    """, (symbol, entry_time))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        opening_order = json.loads(row[0])
+        return extract_execution_price(opening_order)
+    return None
+
+def extract_execution_price(order):
+    activities = order.get("orderActivityCollection", [])
+    if activities:
+        legs = activities[0].get("executionLegs", [])
+        if legs:
+            return float(legs[0].get("price", 0))
+    return None
