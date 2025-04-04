@@ -16,12 +16,12 @@ def format_webhook(order, DISCORD_CHANNEL_ID, MESSAGE_TEMPLATE_OPENING, MESSAGE_
 
         # Calculate percentage gain if order has an open price
         order["percentage_gain"] = (
-            f"{((order['price'] - order['open_price']) / order['open_price'] * 100):.2f}%" 
+            f"{((order['orderPrice'] - order['open_price']) / order['open_price'] * 100):.2f}%" 
             if "open_price" in order else "N/A"
         )
 
         # Determine which message template to use
-        if "open_price" in order:
+        if order['instruction'] in ["SELL_TO_CLOSE", "BUY_TO_CLOSE"]:
             message_content = MESSAGE_TEMPLATE_CLOSING.format(**order)
         else:
             message_content = MESSAGE_TEMPLATE_OPENING.format(**order)
