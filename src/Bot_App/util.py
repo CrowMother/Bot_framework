@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import logging
 from datetime import datetime, timezone, timedelta
 import re
+from typing import List, Dict, Any
 
 def get_secret(key, FILE_PATH="", default=None):
     """
@@ -127,3 +128,52 @@ def check_time_of_day(hour, minute=0):
         return True
     else:    
         return False
+    
+
+def check_file_changed(file_path, last_modified=None):
+    """
+    Checks if the file has been modified since the last time it was checked.
+
+    Args:
+        file_path: str, the path to the file to check.
+        last_modified: datetime, the last time the file was modified. Defaults to None."
+        "    
+    Returns:
+        bool: True if the file has been modified, False otherwise.
+    """
+    try:
+        stat = get_file_last_modified(file_path)
+        if last_modified is None or stat.st_mtime > last_modified:
+            return True
+        else:
+            return False
+    except Exception as e:
+        logging.error(f"Error checking file {file_path}: {e}")
+
+def get_file_last_modified(file_path):
+    """
+    Returns the last modified time of the file.
+
+    Args:
+        file_path: str, the path to the file to check.
+
+    Returns:
+        datetime, the last modified time of the file.
+    """
+    try:
+        stat = os.stat(file_path)
+        return stat.st_mtime
+    except Exception as e:
+        logging.error(f"Error getting last modified time of file {file_path}: {e}")
+
+def flatten_dict(d: Dict, parent_key: str = '', sep: str = '.') -> Dict:
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+    
