@@ -12,3 +12,4 @@ src/Bot_App.egg-info/dependency_links.txt
 src/Bot_App.egg-info/requires.txt
 src/Bot_App.egg-info/top_level.txt
 tests/test_schwab.py
+tests/test_util.py
