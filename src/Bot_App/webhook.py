@@ -6,10 +6,10 @@ import json
 from . import data
 
 
-def post_to_discord(order_json, DISCORD_WEBHOOK_URL):
+def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID):
     content = format_discord_message(order_json)
     payload = {
-        "channel": "1337475225650200576",
+        "channel": DISCORD_CHANNEL_ID,
         "content": content}
 
     response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
