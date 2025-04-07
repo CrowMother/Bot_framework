@@ -46,13 +46,17 @@ def format_discord_message(order, suffix=""):
         leg_lines.append(f"## {symbol}")
         # Add the symbol and strike price
         leg_lines.append(f"> **{date} ${strike} {put_call}**")
-        position_effects.append(position_effect)
+        effect = get_position_context(order)
+        if effect is None:
+            position_effects.append(position_effect)
+        else:
+            position_effects.append(effect)
     # format message for the order
     effect_summary = ', '.join(set(position_effects)) or "UNKNOWN"
     body = "\n".join(leg_lines)
 
     gain_line = ""
-    if any(pe == "CLOSING 🔴" for pe in position_effects):
+    if any("closing" in pe.lower() for pe in position_effects):
         opening_price = find_opening_price(order)
         if opening_price and price:
             pct_change = ((price - opening_price) / opening_price) * 100
@@ -107,3 +111,57 @@ def extract_execution_price(order):
         if legs:
             return float(legs[0].get("price", 0))
     return None
+
+def extract_quantity(order):
+    legs = order.get("orderLegCollection", [])
+    if legs:
+        return float(legs[0].get("quantity", 0))
+    return 0
+
+def find_opening_order(order, db_path="orders.db"):
+    leg = order.get("orderLegCollection", [{}])[0]
+    instrument = leg.get("instrument", {})
+    symbol = instrument.get("symbol", None)
+    entry_time = order.get("enteredTime", None)
+
+    if not symbol or not entry_time:
+        return None
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT full_json FROM schwab_orders
+        WHERE ticker = ? AND position_effect = 'OPENING'
+        AND entered_time < ?
+        ORDER BY entered_time DESC
+        LIMIT 1
+    """, (symbol, entry_time))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return json.loads(row[0])
+    return None
+
+def get_position_context(order, db_path="orders.db"):
+    leg = order.get("orderLegCollection", [{}])[0]
+    position_effect = leg.get("positionEffect", "")
+    current_qty = leg.get("quantity", 0)
+
+    if position_effect == "CLOSING":
+        opening_order = find_opening_order(order, db_path)
+        if opening_order:
+            open_qty = extract_quantity(opening_order)
+            if current_qty < open_qty:
+                return "Partially Closing :orange_circle:"
+            else:
+                return "Closing 🔴"
+
+    elif position_effect == "OPENING":
+        opening_order = find_opening_order(order, db_path)
+        if opening_order:
+            open_qty = extract_quantity(opening_order)
+            if current_qty > open_qty:
+                return "Scaling Up :green_circle:"
