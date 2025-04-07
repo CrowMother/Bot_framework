@@ -6,8 +6,8 @@ import json
 from . import data
 
 
-def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID):
-    content = format_discord_message(order_json)
+def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, suffix=""):
+    content = format_discord_message(order_json, suffix)
     payload = {
         "channel": DISCORD_CHANNEL_ID,
         "content": content}
@@ -15,7 +15,7 @@ def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID):
     response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
     return response.status_code == 204 or response.status_code == 200
 
-def format_discord_message(order):
+def format_discord_message(order, suffix=""):
     """
     Format a Schwab order dictionary into a string suitable for posting to Discord.
 
@@ -58,8 +58,10 @@ def format_discord_message(order):
             pct_change = ((price - opening_price) / opening_price) * 100
             emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend: "
             gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
-
-    return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
+    if suffix == "":
+        return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
+    else:
+        return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
 #-----------------------------------------------------------------------------
 
 def get_open_close_symbol(position_effect):
