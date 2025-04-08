@@ -46,14 +46,6 @@ def create_client(app_key, app_secret):
     logging.debug("Initializing Schwabdev client")
     return schwabdev.Client(app_key, app_secret)
 
-    return ["assetType",
-            "underlyingSymbol",
-            "description",
-            "putCall",
-            "instrumentId",
-            "instruction",
-            "legId",]
-
 def split_description(order):
     try:
         description = order["description"]
