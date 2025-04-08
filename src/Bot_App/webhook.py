@@ -27,6 +27,8 @@ def format_discord_message(order, suffix=""):
     position_effects = []
     leg_lines = []
 
+    total_qty = get_total_quantity(order)
+
     for leg in legs:
         instruction = leg.get("instruction", "UNKNOWN")
         position_effect = leg.get("positionEffect", "")
@@ -34,6 +36,8 @@ def format_discord_message(order, suffix=""):
         instrument = leg.get("instrument", {})
         symbol = instrument.get("symbol", "???").split(" ")[0]
         description = instrument.get("description", "")
+        quantity = leg.get("quantity", 0)
+
         # Extract important parts of the option description
         # date is the first part of the description
         # strike is the second part
@@ -45,7 +49,7 @@ def format_discord_message(order, suffix=""):
 #   # format message for each leg
         leg_lines.append(f"## {symbol}")
         # Add the symbol and strike price
-        leg_lines.append(f"> **{date} ${strike} {put_call}**")
+        leg_lines.append(f"> **{date} ${strike} {put_call}** \n>{sizing_order(total_qty, quantity)} *{instruction}*")
         effect = get_position_context(order)
         if effect is None:
             position_effects.append(position_effect)
@@ -68,13 +72,31 @@ def format_discord_message(order, suffix=""):
         return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
 #-----------------------------------------------------------------------------
 
-def get_open_close_symbol(position_effect):
-    if position_effect == "OPENING":
-        return f"{position_effect} 🟢"
-    elif position_effect == "CLOSING":
-        return f"{position_effect} 🔴"
+def sizing_order(total_qty, quantity):
+    if total_qty <= 1:
+        return ""
+    elif quantity == 0:
+        return ""
     else:
-        return f"{position_effect} 🟡"
+        size = (quantity / total_qty) * 100
+        return f" ({size:.0f}%)"
+
+
+def get_total_quantity(order):
+    legs = order.get("orderLegCollection", [])
+    total_qty = 0
+    for leg in legs:
+        quantity = leg.get("quantity", 0)
+        total_qty += quantity
+    return total_qty
+
+def get_open_close_symbol(effect):
+    if effect == "OPENING":
+        return f"{effect} 🟢"
+    elif effect == "CLOSING":
+        return f"{effect} 🔴"
+    else:
+        return f"{effect} 🟡"
     
 def find_opening_price(order, db_path="orders.db"):
     leg = order.get("orderLegCollection", [{}])[0]
