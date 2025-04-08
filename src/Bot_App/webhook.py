@@ -37,8 +37,7 @@ def format_discord_message(order, suffix=""):
         symbol = instrument.get("symbol", "???").split(" ")[0]
         description = instrument.get("description", "")
         quantity = leg.get("quantity", 0)
-        
-        quantity_percentage = round((quantity / total_qty) * 100) if total_qty > 0 else 0
+
         # Extract important parts of the option description
         # date is the first part of the description
         # strike is the second part
@@ -91,13 +90,13 @@ def get_total_quantity(order):
         total_qty += quantity
     return total_qty
 
-def get_open_close_symbol(position_effect):
-    if position_effect == "OPENING":
-        return f"{position_effect} 🟢"
-    elif position_effect == "CLOSING":
-        return f"{position_effect} 🔴"
+def get_open_close_symbol(effect):
+    if effect == "OPENING":
+        return f"{effect} 🟢"
+    elif effect == "CLOSING":
+        return f"{effect} 🔴"
     else:
-        return f"{position_effect} 🟡"
+        return f"{effect} 🟡"
     
 def find_opening_price(order, db_path="orders.db"):
     leg = order.get("orderLegCollection", [{}])[0]
