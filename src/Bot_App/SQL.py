@@ -39,7 +39,7 @@ def raw_data_to_sql(data: List[Dict], db_name: str = "./test.db"):
 def initialize_db(db_path="orders.db"):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    # cursor.execute("""DROP TABLE IF EXISTS schwab_orders;""")
+    cursor.execute("""DROP TABLE IF EXISTS schwab_orders;""")
     # check if table exists
     cursor.execute("""
         SELECT name FROM sqlite_master WHERE type='table' AND name='schwab_orders';
@@ -62,7 +62,8 @@ def initialize_db(db_path="orders.db"):
         tag TEXT,
         full_json TEXT,
         posted_to_discord INTEGER DEFAULT 0,
-        posted_at TEXT
+        posted_at TEXT,
+        description TEXT
 );
 
     """)
