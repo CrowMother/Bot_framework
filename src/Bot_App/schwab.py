@@ -123,3 +123,4 @@ def extract_and_normailze_legs(order):
     except Exception as e:
         logging.error(f"Error extracting and normalizing legs: {e}")
         return []
+    

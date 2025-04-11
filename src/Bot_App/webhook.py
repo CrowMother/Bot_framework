@@ -145,6 +145,11 @@ def find_opening_order(order, db_path="orders.db"):
     instrument = leg.get("instrument", {})
     symbol = instrument.get("symbol", None)
     entry_time = order.get("enteredTime", None)
+    description = instrument.get("description", None)
+    #get the price from the description
+    if description:
+        strike = data.parse_option_description(description, 3)
+        print(strike)
 
     if not symbol or not entry_time:
         return None
@@ -163,8 +168,23 @@ def find_opening_order(order, db_path="orders.db"):
     row = cursor.fetchone()
     conn.close()
 
+    
+
+
     if row:
-        return json.loads(row[0])
+        for r in row:
+            
+            open_order = json.loads(r)
+            instrument = open_order.get("orderLegCollection", [{}])[0].get("instrument", {})
+            open_description = instrument.get("description")
+            print(open_description)
+            open_strike = data.parse_option_description(open_description, 3)
+            if "VIX" in symbol:
+                print("VIX")
+
+            if open_strike == strike:
+                return open_order
+
     return None
 
 def get_position_context(order, db_path="orders.db"):
