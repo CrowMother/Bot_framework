@@ -181,7 +181,8 @@ def find_opening_order(order, db_path="orders.db"):
             open_strike = data.parse_option_description(open_description, 3)
             if "VIX" in symbol:
                 print("VIX")
-
+            if open_strike == "N/A" or open_strike == "N/A":
+                return open_order
             if open_strike == strike:
                 return open_order
 
