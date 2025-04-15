@@ -2,7 +2,6 @@ import schwabdev
 import logging
 from . import util
 import hashlib
-import datetime
 
 from . import data
 
@@ -18,29 +17,22 @@ class Schwab_client():
         logging.debug("Hello from Schwab_client!")
 
     def get_account_positions(self, filter=None, hours=1):
-        orders = None
-        try:
+        def fetch_orders():
             to_date_str = util.get_start_time(hours)
             from_date_str = util.get_end_time(hours)
+            return self.client.account_orders_all(from_date_str, to_date_str, None, filter)
 
-            response = self.client.account_orders_all( 
-                from_date_str,
-                to_date_str,
-                None,  # Optional: set to limit number of results    
-                filter # Optional: Filter by status
-            )
-
-            if response.status_code == 200:
-                # Parse the JSON content
-                orders = response.json()
-                return orders
+        try:
+            response = util.retry_request(fetch_orders)
+            if response is not None and response.status_code == 200:
+                return response.json()
             else:
-                logging.error(f"Error getting account positions: {response} \n {from_date_str} \n {to_date_str}")
+                logging.error(f"Failed to get account positions after retries. Response: {response}")
                 return None
-            
         except Exception as e:
-            logging.error(f"Error getting account positions: {e} response: {response}")
+            logging.error(f"Unhandled error in get_account_positions: {e}")
             return None
+
 
 def create_client(app_key, app_secret):
     logging.debug("Initializing Schwabdev client")

@@ -3,6 +3,7 @@ import logging
 import sqlite3
 import json
 
+from . import util
 from . import data
 
 
@@ -10,10 +11,15 @@ def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, suffix=
     content = format_discord_message(order_json, suffix)
     payload = {
         "channel": DISCORD_CHANNEL_ID,
-        "content": content}
+        "content": content
+    }
 
-    response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
-    return response.status_code == 204 or response.status_code == 200
+    def do_post():
+        return requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+
+    response = util.retry_request(do_post)
+    return response is not None and (response.status_code == 204 or response.status_code == 200)
+
 
 def format_discord_message(order, suffix=""):
     """
