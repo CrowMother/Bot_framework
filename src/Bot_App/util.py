@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 import time
 import requests
 
-def retry_request(request_func, retries=5, delay=2, backoff=2, retry_on=(requests.exceptions.RequestException,)):
+def retry_request(request_func, retries=3, delay=2, backoff=2, retry_on=(requests.exceptions.RequestException,), raise_on_fail=False):
     for attempt in range(1, retries + 1):
         try:
             return request_func()
@@ -17,8 +17,12 @@ def retry_request(request_func, retries=5, delay=2, backoff=2, retry_on=(request
             logging.warning(f"[Attempt {attempt}] Request failed: {e}. Retrying in {delay}s...")
             time.sleep(delay)
             delay *= backoff
+
     logging.error("All retry attempts failed.")
+    if raise_on_fail:
+        raise e  # re-raise the last exception
     return None
+
 
 
 def get_secret(key, FILE_PATH="", default=None):

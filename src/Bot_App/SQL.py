@@ -36,11 +36,11 @@ def raw_data_to_sql(data: List[Dict], db_name: str = "./test.db"):
     print(f"Exported positions to SQLite DB: {db_name}")
 
 
-def initialize_db(db_path="orders.db"):
+def initialize_db(db_path="orders.db", drop_table=False):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    # REMOVE FOR DEBUGGIN!!!!!!!!!!!!!!!!!
-    # cursor.execute("""DROP TABLE IF EXISTS schwab_orders;""")
+    if drop_table:
+        cursor.execute("""DROP TABLE IF EXISTS schwab_orders;""")
     # check if table exists
     cursor.execute("""
         SELECT name FROM sqlite_master WHERE type='table' AND name='schwab_orders';
