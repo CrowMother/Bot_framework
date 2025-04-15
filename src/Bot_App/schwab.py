@@ -22,16 +22,13 @@ class Schwab_client():
             from_date_str = util.get_end_time(hours)
             return self.client.account_orders_all(from_date_str, to_date_str, None, filter)
 
-        try:
-            response = util.retry_request(fetch_orders)
-            if response is not None and response.status_code == 200:
-                return response.json()
-            else:
-                logging.error(f"Failed to get account positions after retries. Response: {response}")
-                return None
-        except Exception as e:
-            logging.error(f"Unhandled error in get_account_positions: {e}")
+        response = util.retry_request(fetch_orders, raise_on_fail=True)
+        if response is not None and response.status_code == 200:
+            return response.json()
+        else:
+            logging.error(f"Failed to get account positions after retries. Response: {response}")
             return None
+
 
 
 def create_client(app_key, app_secret):
