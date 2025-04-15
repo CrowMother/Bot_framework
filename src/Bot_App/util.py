@@ -6,6 +6,20 @@ import logging
 from datetime import datetime, timezone, timedelta
 import re
 from typing import List, Dict, Any
+import time
+import requests
+
+def retry_request(request_func, retries=5, delay=2, backoff=2, retry_on=(requests.exceptions.RequestException,)):
+    for attempt in range(1, retries + 1):
+        try:
+            return request_func()
+        except retry_on as e:
+            logging.warning(f"[Attempt {attempt}] Request failed: {e}. Retrying in {delay}s...")
+            time.sleep(delay)
+            delay *= backoff
+    logging.error("All retry attempts failed.")
+    return None
+
 
 def get_secret(key, FILE_PATH="", default=None):
     """
