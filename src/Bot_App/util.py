@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 import time
 import requests
 
-def retry_request(request_func, retries=3, delay=2, backoff=2, retry_on=(requests.exceptions.RequestException,), raise_on_fail=False):
+def retry_request(request_func, retries=3, delay=5, backoff=2, retry_on=(requests.exceptions.RequestException,), raise_on_fail=False):
     for attempt in range(1, retries + 1):
         try:
             return request_func()
