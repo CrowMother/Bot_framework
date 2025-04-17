@@ -22,61 +22,53 @@ def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, suffix=
 
 
 def format_discord_message(order, suffix=""):
-    """
-    Format a Schwab order dictionary into a string suitable for posting to Discord.
-
-    :param order: A dictionary of a Schwab order
-    :return: A string representation of the order
-    """
     legs = order.get("orderLegCollection", [])
     price = order.get("price", "?")
     position_effects = []
     leg_lines = []
-
     total_qty = get_total_quantity(order)
 
     for leg in legs:
         instruction = leg.get("instruction", "UNKNOWN")
         position_effect = leg.get("positionEffect", "")
-        position_effect = get_open_close_symbol(position_effect)
+        position_effect_symbol = get_open_close_symbol(position_effect)
         instrument = leg.get("instrument", {})
         symbol = instrument.get("symbol", "???").split(" ")[0]
         description = instrument.get("description", "")
         quantity = leg.get("quantity", 0)
 
-        # Extract important parts of the option description
-        # date is the first part of the description
-        # strike is the second part
-        # put or call is the fourth part
         date = data.parse_option_description(description, 2)
         strike = data.parse_option_description(description, 3)
         put_call = data.parse_option_description(description, 4)
-#------------------------------------------------------------------------------
-#   # format message for each leg
+
         leg_lines.append(f"## {symbol}")
-        # Add the symbol and strike price
         leg_lines.append(f"> **{date} ${strike} {put_call}** \n>{sizing_order(total_qty, quantity)} *{instruction}*")
-        effect = get_position_context(order)
-        if effect is None:
-            position_effects.append(position_effect)
+
+        context_label, opening_order = get_position_context(order)
+
+        if context_label:
+            position_effects.append(context_label)
         else:
-            position_effects.append(effect)
-    # format message for the order
+            position_effects.append(position_effect_symbol)
+
+    # Format message body
     effect_summary = ', '.join(set(position_effects)) or "UNKNOWN"
     body = "\n".join(leg_lines)
 
     gain_line = ""
-    if any("closing" in pe.lower() for pe in position_effects):
-        opening_price = find_opening_price(order)
-        if opening_price and price:
-            pct_change = ((price - opening_price) / opening_price) * 100
-            emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend: "
-            gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
+    if any("closing" in pe.lower() or "closed" in pe.lower() for pe in position_effects):
+        if opening_order:
+            open_price = extract_execution_price(opening_order)
+            if open_price and price:
+                pct_change = ((price - open_price) / open_price) * 100
+                emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend:"
+                gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
+
     if suffix == "":
         return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
     else:
         return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
-#-----------------------------------------------------------------------------
+
 
 def sizing_order(total_qty, quantity):
     if total_qty <= 1:
@@ -205,17 +197,15 @@ def get_position_context(order, db_path="orders.db"):
     entry_time = order.get("enteredTime", None)
 
     if not symbol or not description or not entry_time:
-        return None
+        return None, None  # (label, opening_order)
 
     if position_effect == "CLOSING":
-        # Get original opened quantity
         opening_order = find_opening_order(order, db_path)
         if not opening_order:
-            return "Closing 🔴"  # fallback
+            return "Closing 🔴", None
 
         open_qty = extract_quantity(opening_order)
 
-        # Get all previously closed quantity before this order
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -231,14 +221,13 @@ def get_position_context(order, db_path="orders.db"):
         total_closed_qty = prev_closed_qty + current_qty
 
         if total_closed_qty < open_qty:
-            return "Partially Closing :orange_circle:"
+            return "Partially Closing :orange_circle:", opening_order
         elif total_closed_qty == open_qty:
-            return "Fully Closed ✅"
+            return "Fully Closed :red_square:", opening_order
         else:
-            return "Over Closed ⚠️"  # Optional: detect bugs or double-posting
+            return "Over Closed ⚠️", opening_order
 
     elif position_effect == "OPENING":
-        # Check how much has already been opened before this order
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -251,12 +240,12 @@ def get_position_context(order, db_path="orders.db"):
         conn.close()
 
         prev_opened_qty = result[0] if result and result[0] else 0
-        total_opened_qty = prev_opened_qty + current_qty
 
         if prev_opened_qty > 0:
-            return "Scaling Up :green_circle:"
+            return "Scaling Up :green_circle:", None
 
-    return None
+    return None, None
+
 
 
 
