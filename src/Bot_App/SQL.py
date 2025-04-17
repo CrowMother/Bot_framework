@@ -72,5 +72,8 @@ def initialize_db(db_path="orders.db", drop_table=False):
     conn.commit()
     conn.close()
 
+# move: mark_as_posted, get_unposted_orders, store_orders, generate_order_id
+# and look into creating function to break down large main function into smaller ones
+
 if __name__ == "__main__":
     initialize_db()
