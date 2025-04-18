@@ -8,6 +8,47 @@ import re
 from typing import List, Dict, Any
 import time
 import requests
+import hashlib
+import json
+import sqlite3
+
+# example usage:
+# logger = setup_logging(level=logging.DEBUG, name=__name__)
+# setup the function calls in other files
+def setup_logging(level=logging.INFO, name=None):
+    """
+    Sets up logging with a given level and optional logger name.
+
+    Parameters:
+    - level: logging level (e.g., logging.DEBUG, logging.INFO)
+    - name: logger name (if None, uses root logger)
+    """
+    logger = logging.getLogger(name)
+
+    # Prevent duplicate handlers if already configured
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    logger.setLevel(level)
+    return logger
+
+def generate_order_id(order):
+    entered_time = order.get('enteredTime', '')
+    # Safely extract instruction from first leg
+    instruction = ''
+    symbol = ''
+
+    if 'orderLegCollection' in order and len(order['orderLegCollection']) > 0:
+        first_leg = order['orderLegCollection'][0]
+        instruction = first_leg.get('instruction', '')
+        symbol = first_leg.get('instrument', {}).get('symbol', '')
+
+    unique_string = f"{entered_time}_{instruction}_{symbol}"
+    return hashlib.sha256(unique_string.encode()).hexdigest()
+
 
 def retry_request(request_func, retries=3, delay=5, backoff=2, retry_on=(requests.exceptions.RequestException,), raise_on_fail=False):
     for attempt in range(1, retries + 1):

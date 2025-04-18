@@ -6,6 +6,9 @@ from . import util
 import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Union
+import sqlite3
+import json
+from datetime import datetime
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -91,3 +94,79 @@ def parse_option_description(description, position):
         logging.error(f"Error in parse_option_description: {e}")
         return "N/A"
     
+
+def store_orders(orders, db_path="orders.db"):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+# make this more generic and lass hardcoded so it can be used for parsing open orders
+    for order in orders:
+        # Default values
+        instruction = None
+        position_effect = None
+        symbol = None
+
+        # Extract from orderLegCollection if available
+        if 'orderLegCollection' in order and len(order['orderLegCollection']) > 0:
+            first_leg = order['orderLegCollection'][0]
+            instruction = first_leg.get('instruction', None)
+            position_effect = first_leg.get('positionEffect', None)
+            instrument = first_leg.get('instrument', {})
+            symbol = instrument.get('symbol', None)
+            description = instrument.get('description', None)
+
+        order_id = util.generate_order_id(order)
+        full_json = json.dumps(order)
+
+        try:
+            cursor.execute("""
+                INSERT INTO schwab_orders (
+                    id, entered_time, ticker, instruction, position_effect, 
+                    order_status, quantity, tag, full_json, posted_to_discord, posted_at, description
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                order_id,
+                order.get('enteredTime'),
+                symbol,
+                instruction,
+                position_effect,
+                order.get('status'),
+                order.get('quantity'),
+                order.get('tag'),
+                full_json,
+                0,  # posted_to_discord default
+                None,  # posted_at default
+                description
+            ))
+        except sqlite3.IntegrityError:
+            pass  # Order already exists
+
+    conn.commit()
+    conn.close()
+
+def get_unposted_orders(db_path="orders.db"):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, full_json FROM schwab_orders
+        WHERE posted_to_discord = FALSE
+    """)
+
+    orders = cursor.fetchall()
+    conn.close()
+
+    return orders
+
+
+def mark_as_posted(order_id, db_path="orders.db"):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE schwab_orders
+        SET posted_to_discord = TRUE, posted_at = ?
+        WHERE id = ?
+    """, (datetime.utcnow().isoformat(), order_id))
+
+    conn.commit()
+    conn.close()
