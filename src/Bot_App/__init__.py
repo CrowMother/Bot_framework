@@ -9,7 +9,7 @@ from .webhook import *
 from .gsheet import *
 
 # Optional: Define the version of your library
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # Define what gets imported with `from Bot_App import *`
 # __all__ = ["function1", "Class1"]

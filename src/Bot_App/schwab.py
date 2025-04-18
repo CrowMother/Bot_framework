@@ -8,7 +8,6 @@ from . import data
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-
 class Schwab_client():
     def __init__(self, account, secret):
         self.client = create_client(account, secret)
