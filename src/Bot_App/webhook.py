@@ -191,61 +191,57 @@ def get_position_context(order, db_path="orders.db"):
     leg = order.get("orderLegCollection", [{}])[0]
     position_effect = leg.get("positionEffect", "")
     current_qty = leg.get("quantity", 0)
-
     instrument = leg.get("instrument", {})
     symbol = instrument.get("symbol", None)
     description = instrument.get("description", None)
     entry_time = order.get("enteredTime", None)
 
     if not symbol or not description or not entry_time:
-        return None, None  # (label, opening_order)
+        return None, None
 
     if position_effect == "CLOSING":
-        opening_order = find_opening_order(order, db_path)
-        if not opening_order:
-            return "Closing 🔴", None
-
-        open_qty = extract_quantity(opening_order)
-
+        # Fetch all OPENING quantity before this order
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT SUM(quantity) FROM schwab_orders
-            WHERE instruction IN ('SELL_TO_CLOSE', 'BUY_TO_CLOSE')
-            AND ticker = ? AND description = ?
-            AND entered_time < ?
-        """, (symbol, description, entry_time))
-        result = cursor.fetchone()
-        conn.close()
 
-        prev_closed_qty = result[0] if result and result[0] else 0
-        total_closed_qty = prev_closed_qty + current_qty
-
-        if total_closed_qty < open_qty:
-            return "Partially Closing :orange_circle:", opening_order
-        elif total_closed_qty == open_qty:
-            return "Fully Closed :red_square:", opening_order
-        else:
-            return "Over Closed ⚠️", opening_order
-
-    elif position_effect == "OPENING":
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
         cursor.execute("""
             SELECT SUM(quantity) FROM schwab_orders
             WHERE instruction IN ('BUY_TO_OPEN', 'SELL_TO_OPEN')
             AND ticker = ? AND description = ?
             AND entered_time < ?
         """, (symbol, description, entry_time))
-        result = cursor.fetchone()
+        open_result = cursor.fetchone()
+        open_qty = open_result[0] if open_result and open_result[0] else 0
+
+        cursor.execute("""
+            SELECT SUM(quantity) FROM schwab_orders
+            WHERE instruction IN ('SELL_TO_CLOSE', 'BUY_TO_CLOSE')
+            AND ticker = ? AND description = ?
+            AND entered_time < ?
+        """, (symbol, description, entry_time))
+        closed_result = cursor.fetchone()
+        prev_closed_qty = closed_result[0] if closed_result and closed_result[0] else 0
+
         conn.close()
 
-        prev_opened_qty = result[0] if result and result[0] else 0
+        total_closed_qty = prev_closed_qty + current_qty
 
-        if prev_opened_qty > 0:
-            return "Scaling Up :green_circle:", None
+        if open_qty == 0:
+            return "Closing 🔴", None  # fallback
+
+        if total_closed_qty < open_qty:
+            return "Partially Closing :orange_circle:", None
+        elif total_closed_qty == open_qty:
+            return "Fully Closed ✅", None
+        else:
+            return "Over Closed ⚠️", None
+
+    elif position_effect == "OPENING":
+        # Optional: track scaling behavior
+        return "Opening 🟢", None
 
     return None, None
+
 
 
 
