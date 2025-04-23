@@ -160,37 +160,116 @@ def connect_to_sheet(client, spreadsheet_name, worksheet_name):
         logging.info("Opening Google Sheet")
         spreadsheet = client.open(spreadsheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
+        logging.info(f"Worksheet title: {worksheet.title}")
         return worksheet
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
-def format_data(order):
+def format_data(pair):
     """
-    Formats order data into a list of strings suitable for insertion into a Google Sheet.
-
+    Formats a pair of open and close orders into a row for Google Sheets.
+    
     Args:
-        order (dict): A dictionary containing order details, including keys 'symbol',
-                      'date', 'strike', 'putCall', 'open_price', and 'price'.
-
+        pair (dict): A dictionary with 'open' and 'close' order objects.
+        
     Returns:
-        list: A list of strings representing the formatted order data.
-
-    Raises:
-        Exception: If an error occurs during the formatting process, it logs the error.
+        list: [symbol, expiration, contract, open price, max close price]
     """
-
     try:
-        row_data = [
-                str(order['symbol']),
-                str(order['date']),
-                str(f"{order['strike']} {order['putCall']}"),
-                str(order['open_price']),
-                str(order['price']),
-            ]
-        return row_data
+        open_order = pair["open"]
+        close_order = pair["close"]
+
+        open_leg = open_order["orderLegCollection"][0]
+        close_leg = close_order["orderLegCollection"][0]
+        instrument = open_leg["instrument"]
+
+        symbol = instrument["underlyingSymbol"]
+        exp_raw = instrument["symbol"].split()[1]  # e.g., 250425
+        formatted_exp = f"{exp_raw[2:4]}/{exp_raw[4:6]}/20{exp_raw[0:2]}"
+        strike = instrument["symbol"][-8:-3].lstrip("0")
+        put_call = instrument["putCall"]
+        contract = f"{strike} {put_call}"
+
+        # Entry (open) price
+        entry_price = next(
+            (leg["price"]
+             for act in open_order.get("orderActivityCollection", [])
+             for leg in act.get("executionLegs", [])),
+            None
+        )
+
+        # Max exit price
+        max_exit_price = max([
+            leg["price"]
+            for act in close_order.get("orderActivityCollection", [])
+            for leg in act.get("executionLegs", [])
+        ])
+
+        return [
+            symbol,
+            formatted_exp,
+            contract,
+            round(entry_price, 2) if entry_price is not None else "",
+            round(max_exit_price, 2)
+        ]
+
     except Exception as e:
         logging.error(f"An error occurred in format_data: {e}")
+        return ["ERROR", "", "", "", ""]
 
+
+def pair_orders(orders):
+    """
+    Pairs open and close orders by instrumentId.
+
+    Args:
+        orders (list): List of order dictionaries.
+
+    Returns:
+        list of dicts: Each dict contains both open and close info.
+    """
+    from collections import defaultdict
+
+    pairs = []
+    grouped = defaultdict(dict)  # {instrumentId: {"open": order, "close": order}}
+
+    for order in orders:
+        try:
+            leg = order["orderLegCollection"][0]
+            instrument_id = leg["instrument"]["instrumentId"]
+            instruction = leg["instruction"]
+
+            if instruction == "BUY_TO_OPEN":
+                grouped[instrument_id]["open"] = order
+            elif instruction == "SELL_TO_CLOSE":
+                # Only keep the highest close if multiple
+                current_close = grouped[instrument_id].get("close")
+                new_price = max([
+                    exec_leg["price"]
+                    for act in order.get("orderActivityCollection", [])
+                    for exec_leg in act.get("executionLegs", [])
+                ])
+
+                if not current_close:
+                    grouped[instrument_id]["close"] = order
+                else:
+                    existing_price = max([
+                        exec_leg["price"]
+                        for act in current_close.get("orderActivityCollection", [])
+                        for exec_leg in act.get("executionLegs", [])
+                    ])
+                    if new_price > existing_price:
+                        grouped[instrument_id]["close"] = order
+
+        except Exception as e:
+            logging.error(f"Error in pairing logic: {e}")
+
+    # Filter for complete pairs
+    for instrument_id, orders in grouped.items():
+        if "open" in orders and "close" in orders:
+            pairs.append(orders)
+
+    return pairs
 
 
 def write_row_at_next_empty_row(worksheet, row_data):
@@ -207,6 +286,8 @@ def write_row_at_next_empty_row(worksheet, row_data):
     Raises:
         Exception: If an error occurs while writing the data.
     """
+    
+
     try:
         row = get_next_empty_row(worksheet, 2)
         row = f"B{row}"
