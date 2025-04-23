@@ -160,36 +160,49 @@ def connect_to_sheet(client, spreadsheet_name, worksheet_name):
         logging.info("Opening Google Sheet")
         spreadsheet = client.open(spreadsheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
+        logging.info(f"Worksheet title: {worksheet.title}")
         return worksheet
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
 def format_data(order):
     """
-    Formats order data into a list of strings suitable for insertion into a Google Sheet.
+    Formats Schwab order data for Google Sheets.
 
     Args:
-        order (dict): A dictionary containing order details, including keys 'symbol',
-                      'date', 'strike', 'putCall', 'open_price', and 'price'.
+        order (dict): Schwab order JSON object.
 
     Returns:
-        list: A list of strings representing the formatted order data.
-
-    Raises:
-        Exception: If an error occurs during the formatting process, it logs the error.
+        list: [Ticker, Expiration, Contract, Entry, Max Exit]
     """
-
     try:
-        row_data = [
-                str(order['symbol']),
-                str(order['date']),
-                str(f"{order['strike']} {order['putCall']}"),
-                str(order['open_price']),
-                str(order['price']),
-            ]
-        return row_data
+        leg = order["orderLegCollection"][0]
+        instrument = leg["instrument"]
+        activity = order["orderActivityCollection"][0]
+        execution = activity["executionLegs"][0]
+
+        symbol = instrument["underlyingSymbol"]
+        exp_date = instrument["symbol"].split()[1]  # e.g., 250425
+        strike = instrument["symbol"][-8:-3].lstrip("0")  # "$490" as 490
+        put_call = instrument["putCall"]
+        entry_price = execution["price"]
+        exit_price = order.get("price", "")
+
+        # Format exp_date into MM/DD/YY
+        formatted_exp = f"{exp_date[2:4]}/{exp_date[4:6]}/20{exp_date[0:2]}"
+
+        return [
+            symbol,
+            formatted_exp,
+            f"{strike} {put_call}",
+            round(entry_price, 2),
+            round(exit_price, 2) if exit_price else ""
+        ]
+
     except Exception as e:
         logging.error(f"An error occurred in format_data: {e}")
+        return ["ERROR", "", "", "", ""]
+
 
 
 
@@ -207,6 +220,8 @@ def write_row_at_next_empty_row(worksheet, row_data):
     Raises:
         Exception: If an error occurs while writing the data.
     """
+    
+
     try:
         row = get_next_empty_row(worksheet, 2)
         row = f"B{row}"
