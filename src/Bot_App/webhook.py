@@ -227,12 +227,14 @@ def get_position_context(order, db_path="orders.db"):
         total_closed_qty = prev_closed_qty + current_qty
 
         if open_qty == 0:
+            data.mark_open_positions_closed(symbol, description, entry_time, db_path)
             return "Closing 🔴", None  # fallback
 
         if total_closed_qty < open_qty:
             return "Partially Closing :orange_circle:", None
         elif total_closed_qty == open_qty:
-            return "Fully Closed ✅", None
+            data.mark_open_positions_closed(symbol, description, entry_time, db_path)
+            return "Fully Closed 🟥", None
         else:
             return "Over Closed ⚠️", None
 

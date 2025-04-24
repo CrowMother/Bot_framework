@@ -236,3 +236,16 @@ def flatten_dict(d: Dict, parent_key: str = '', sep: str = '.') -> Dict:
     return dict(items)
 
     
+
+def str_to_bool(value):
+    """
+    Converts a value to a boolean based on its string representation.
+
+    Args:
+        value: The value to convert to a boolean.
+
+    Returns:
+        bool: True if the string representation of the value is "true" (case-insensitive),
+              False otherwise.
+    """
+    return str(value).strip().lower() == "true"

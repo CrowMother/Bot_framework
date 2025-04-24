@@ -170,3 +170,22 @@ def mark_as_posted(order_id, db_path="orders.db"):
 
     conn.commit()
     conn.close()
+
+def mark_open_positions_closed(symbol: str, description: str, up_to_time: str, db_path="orders.db"):
+    """
+    Mark all open positions matching the symbol + description as closed up to a certain time.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE schwab_orders
+        SET is_open_position = 0
+        WHERE ticker = ? AND description = ?
+        AND position_effect = 'OPENING'
+        AND entered_time <= ?
+        AND is_open_position = 1
+    """, (symbol, description, up_to_time))
+
+    conn.commit()
+    conn.close()

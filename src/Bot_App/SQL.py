@@ -2,6 +2,10 @@ import sqlite3
 from typing import List, Dict, Any
 from Bot_App import util
 import os
+import logging
+
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def raw_data_to_sql(data: List[Dict], db_name: str = "./test.db"):
     os.makedirs(os.path.dirname(db_name), exist_ok=True)
@@ -40,6 +44,7 @@ def initialize_db(db_path="orders.db", drop_table=False):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     if drop_table:
+        logging.info("Dropping table 'schwab_orders' if it exists.")
         cursor.execute("""DROP TABLE IF EXISTS schwab_orders;""")
     # check if table exists
     cursor.execute("""
@@ -64,7 +69,8 @@ def initialize_db(db_path="orders.db", drop_table=False):
         full_json TEXT,
         posted_to_discord INTEGER DEFAULT 0,
         posted_at TEXT,
-        description TEXT
+        description TEXT,
+        is_open_position INTEGER DEFAULT 0
 );
 
     """)
@@ -72,8 +78,6 @@ def initialize_db(db_path="orders.db", drop_table=False):
     conn.commit()
     conn.close()
 
-# move: mark_as_posted, get_unposted_orders, store_orders, generate_order_id
-# and look into creating function to break down large main function into smaller ones
 
 if __name__ == "__main__":
     initialize_db()
