@@ -199,10 +199,24 @@ def get_position_context(order, db_path="orders.db"):
     if not symbol or not description or not entry_time:
         return None, None
 
+    opening_order = None
+
     if position_effect == "CLOSING":
-        # Fetch all OPENING quantity before this order
+        # Fetch most recent prior OPENING order (for gain calc)
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT full_json FROM schwab_orders
+            WHERE instruction IN ('BUY_TO_OPEN', 'SELL_TO_OPEN')
+            AND ticker = ? AND description = ?
+            AND entered_time < ?
+            ORDER BY entered_time DESC
+            LIMIT 1
+        """, (symbol, description, entry_time))
+        row = cursor.fetchone()
+        if row:
+            opening_order = json.loads(row[0])
 
         cursor.execute("""
             SELECT SUM(quantity) FROM schwab_orders
@@ -227,22 +241,21 @@ def get_position_context(order, db_path="orders.db"):
         total_closed_qty = prev_closed_qty + current_qty
 
         if open_qty == 0:
-            data.mark_open_positions_closed(symbol, description, entry_time, db_path)
-            return "Closing 🔴", None  # fallback
-
+            return "Closing 🔴", opening_order  # fallback
+        
         if total_closed_qty < open_qty:
-            return "Partially Closing :orange_circle:", None
+            return "Partially Closing :orange_circle:", opening_order
         elif total_closed_qty == open_qty:
             data.mark_open_positions_closed(symbol, description, entry_time, db_path)
-            return "Fully Closed 🟥", None
+            return "Fully Closed 🟥", opening_order
         else:
-            return "Over Closed ⚠️", None
+            return "Over Closed ⚠️", opening_order
 
     elif position_effect == "OPENING":
-        # Optional: track scaling behavior
         return "Opening 🟢", None
 
     return None, None
+
 
 
 
