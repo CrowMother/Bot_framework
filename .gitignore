@@ -1,2 +1,4 @@
 tokens.json
 *.pyc
+.venv
+*.pyc
