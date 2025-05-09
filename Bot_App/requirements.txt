@@ -1,2 +1,0 @@
-logging
-mysql-connector-python 

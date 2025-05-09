@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: Bot_App
+Version: 0.3.0
+Requires-Dist: requests
+Requires-Dist: pandas
+Requires-Dist: python-dotenv
+Requires-Dist: schwabdev
+Dynamic: requires-dist
