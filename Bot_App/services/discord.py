@@ -9,6 +9,7 @@ from Bot_App.core.order_utils import (
     extract_execution_price,
     parse_option_description
 )
+from Bot_App.core.position_tracker import consume_open_position
 from Bot_App.config import secrets
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,15 +21,14 @@ def send_discord_alert(order_json, webhook_url, channel_id, suffix=""):
 
     # Calculate gain
     if order_json.get("orderLegCollection", [{}])[0].get("positionEffect") == "CLOSING":
-        open_order = find_matching_open_order(order_json)
-        open_price = extract_execution_price(open_order) if open_order else None
+        avg_open, used_qty = consume_open_position(order_json)
         close_price = extract_execution_price(order_json)
-        gain = calculate_percentage_gain(open_price, close_price)
+        gain = calculate_percentage_gain(avg_open, close_price)
 
     # Add gain line
     if gain is not None:
         emoji = ":chart_with_upwards_trend:" if gain >= 0 else ":chart_with_downwards_trend:"
-        gain_line = f"\n{emoji} **{gain:+.2f}%** vs open"
+        gain_line = f"\n{emoji} **{gain:+.2f}%** vs open @ ${avg_open}"
     else:
         gain_line = ""
 

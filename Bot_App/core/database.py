@@ -27,26 +27,48 @@ def store_orders(orders, db_path="orders.db"):
             description = instrument.get('description')
 
         try:
+            from Bot_App.core.position_tracker import initialize_open_positions_table
+
+            # At the start of the function (once per run)
+            initialize_open_positions_table(db_path)
+
             cursor.execute("""
-                INSERT INTO schwab_orders (
-                    id, entered_time, ticker, instruction, position_effect,
-                    order_status, quantity, tag, full_json, posted_to_discord,
-                    posted_at, description
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                order_id,
-                order.get('enteredTime'),
-                symbol,
-                instruction,
-                position_effect,
-                order.get('status'),
-                order.get('quantity'),
-                order.get('tag'),
-                full_json,
-                0,
-                None,
-                description
-            ))
+                    INSERT INTO schwab_orders (
+                        id, entered_time, ticker, instruction, position_effect,
+                        order_status, quantity, tag, full_json, posted_to_discord,
+                        posted_at, description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    order_id,
+                    order.get('enteredTime'),
+                    symbol,
+                    instruction,
+                    position_effect,
+                    order.get('status'),
+                    order.get('quantity'),
+                    order.get('tag'),
+                    full_json,
+                    0,
+                    None,
+                    description
+                ))
+            # After INSERT INTO schwab_orders
+            if position_effect == "OPENING":
+                open_id = generate_order_id(order)
+                entered_time = order.get("enteredTime")
+                price = order.get("price", 0)
+                cursor.execute("""
+                    INSERT OR IGNORE INTO open_positions (id, ticker, description, price, quantity, entered_time)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    open_id,
+                    symbol,
+                    description,
+                    price,
+                    order.get("quantity"),
+                    entered_time
+                ))
+                
         except sqlite3.IntegrityError:
             pass  # Duplicate order, skip
 
