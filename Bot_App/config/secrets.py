@@ -66,9 +66,14 @@ def check_time_of_week(day, hour):
     return now.weekday() == day and now.hour == hour
 
 
-def check_time_of_day(hour, minute=0):
+def check_time_of_day(hour, minute):
     now = datetime.now()
     return now.hour == hour and now.minute == minute
+
+def check_time_of_day(hour):
+    now = datetime.now()
+    logging.debug(f"{now.hour} : {hour}")
+    return now.hour == hour
 
 
 def check_file_changed(file_path, last_modified=None):
@@ -90,3 +95,6 @@ def get_file_last_modified(file_path):
 
 def str_to_bool(value):
     return str(value).strip().lower() == "true"
+
+def get_date():
+    return datetime.now(timezone.utc).strftime("%m / %d")
