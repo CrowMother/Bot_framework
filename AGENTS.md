@@ -30,4 +30,5 @@ Adhere to the layout of modern templates like **cshmookler/py_template** :conten
 
 1. Install dev dependencies:
    ```bash
-   pip install -e .[dev]
+   pip install -e .[dev]   
+   ```
