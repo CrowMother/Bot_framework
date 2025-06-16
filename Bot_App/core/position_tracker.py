@@ -7,6 +7,7 @@ logging.basicConfig(
 
 
 def initialize_open_positions_table(db_path="orders.db"):
+    """Ensure the table tracking open positions exists."""
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -25,6 +26,7 @@ def initialize_open_positions_table(db_path="orders.db"):
 
 
 def consume_open_position(order, db_path="orders.db"):
+    """Consume quantity from open positions and return average open price."""
     order_leg = order.get("orderLegCollection", [{}])[0]
     instrument = order_leg.get("instrument", {})
     symbol = instrument.get("symbol")
