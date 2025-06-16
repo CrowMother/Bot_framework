@@ -10,6 +10,7 @@ logging.basicConfig(
 
 
 def store_orders(orders, db_path="orders.db"):
+    """Persist orders to SQLite and track open positions."""
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
 
@@ -103,6 +104,7 @@ def store_orders(orders, db_path="orders.db"):
 
 
 def get_unposted_orders(db_path="orders.db"):
+    """Return orders that have not been sent to Discord."""
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -116,6 +118,7 @@ def get_unposted_orders(db_path="orders.db"):
 
 
 def mark_as_posted(order_id, db_path="orders.db"):
+    """Mark an order as posted to Discord."""
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -135,6 +138,7 @@ def mark_open_positions_closed(
     up_to_time,
     db_path="orders.db",
 ):
+    """Flag open positions as closed up to ``up_to_time``."""
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -152,6 +156,7 @@ def mark_open_positions_closed(
 
 
 def initialize_db(db_path="orders.db", drop_table=False):
+    """Create required tables in the database."""
     import sqlite3
     import logging
 

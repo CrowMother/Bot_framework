@@ -7,14 +7,21 @@ from Bot_App.core.order_utils import (
     find_matching_open_order,
     calculate_percentage_gain,
     extract_execution_price,
-    parse_option_description
+    parse_option_description,
 )
 from Bot_App.core.position_tracker import consume_open_position
 from Bot_App.config import secrets
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 def send_discord_alert(order_json, webhook_url, channel_id, suffix=""):
+    """Post a formatted order message to Discord.
+
+    Returns ``True`` when the request succeeds.
+    """
     content = format_discord_message(order_json)
     gain = None
     suffix_line = suffix if suffix else ""
@@ -27,7 +34,11 @@ def send_discord_alert(order_json, webhook_url, channel_id, suffix=""):
 
     # Add gain line
     if gain is not None:
-        emoji = ":chart_with_upwards_trend:" if gain >= 0 else ":chart_with_downwards_trend:"
+        emoji = (
+            ":chart_with_upwards_trend:"
+            if gain >= 0
+            else ":chart_with_downwards_trend:"
+        )
         gain_line = f"\n{emoji} **{gain:+.2f}%** vs open @ ${avg_open}"
     else:
         gain_line = ""
@@ -35,7 +46,7 @@ def send_discord_alert(order_json, webhook_url, channel_id, suffix=""):
     # Final formatted message
     payload = {
         "channel": channel_id,
-        "content": f"{content}{gain_line}\n{suffix_line}".strip()
+        "content": f"{content}{gain_line}\n{suffix_line}".strip(),
     }
 
     def do_post():
@@ -44,7 +55,9 @@ def send_discord_alert(order_json, webhook_url, channel_id, suffix=""):
     response = secrets.retry_request(do_post)
     return response is not None and response.status_code in (200, 204)
 
+
 def format_discord_message(order, suffix=""):
+    """Convert an order dict into a Markdown message."""
     legs = order.get("orderLegCollection", [])
     price = order.get("price", "?")
     position_effects = []
@@ -64,25 +77,36 @@ def format_discord_message(order, suffix=""):
         put_call = parse_option_description(description, 4)
 
         leg_lines.append(f"## {symbol}")
-        leg_lines.append(f"> **{date} ${strike} {put_call}** \n>{sizing_order(total_qty, quantity)} *{instruction}*")
+        leg_lines.append(
+            f"> **{date} ${strike} {put_call}** \n>{sizing_order(total_qty, quantity)} *{instruction}*"
+        )
 
         effect_label = get_open_close_symbol(position_effect)
         position_effects.append(effect_label)
 
-    effect_summary = ', '.join(set(position_effects)) or "UNKNOWN"
+    effect_summary = ", ".join(set(position_effects)) or "UNKNOWN"
     body = "\n".join(leg_lines)
     return f"{body}\n@ ${price} *{effect_summary}*"
 
+
 def get_total_quantity(order):
+    """Sum the quantity of all legs in ``order``."""
+
     return sum(leg.get("quantity", 0) for leg in order.get("orderLegCollection", []))
 
+
 def sizing_order(total_qty, quantity):
+    """Return leg sizing as a percentage string."""
+
     if total_qty <= 1 or quantity == 0:
         return ""
     size = (quantity / total_qty) * 100
     return f" ({size:.0f}%)"
 
+
 def get_open_close_symbol(effect):
+    """Return an emoji for the given position effect."""
+
     if effect == "OPENING":
         return f"{effect} 🟢"
     elif effect == "CLOSING":
