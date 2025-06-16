@@ -5,7 +5,9 @@ import logging
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def get_secret(key, FILE_PATH="", default=None):
@@ -20,37 +22,51 @@ def get_secret(key, FILE_PATH="", default=None):
         return default
 
 
-def retry_request(request_func, retries=3, delay=5, backoff=2, retry_on=(requests.exceptions.RequestException,), raise_on_fail=False):
+def retry_request(
+    request_func,
+    retries=3,
+    delay=5,
+    backoff=2,
+    retry_on=(requests.exceptions.RequestException,),
+    raise_on_fail=False,
+):
+    last_exception = None
     for attempt in range(1, retries + 1):
         try:
             return request_func()
-        except retry_on as e:
-            logging.warning(f"[Attempt {attempt}] Request failed: {e}. Retrying in {delay}s...")
+        except retry_on as exc:  # noqa: E501
+            last_exception = exc
+            logging.warning(
+                "[Attempt %s] Request failed: %s. Retrying in %ss...",
+                attempt,
+                exc,
+                delay,
+            )
             time.sleep(delay)
             delay *= backoff
 
     logging.error("All retry attempts failed.")
-    if raise_on_fail:
-        raise e
+    if raise_on_fail and last_exception is not None:
+        raise last_exception
     return None
 
 
 def get_start_time(delta=1):
     now = datetime.now(timezone.utc)
-    return now.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    return now.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
 def get_end_time(delta=1):
     now = datetime.now(timezone.utc)
     past = now - timedelta(hours=delta)
-    return past.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    return past.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
 def get_current_time():
-    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
-def flatten_dict(d, parent_key='', sep='.'):
+def flatten_dict(d, parent_key="", sep="."):
     items = []
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -69,11 +85,6 @@ def check_time_of_week(day, hour):
 def check_time_of_day(hour, minute):
     now = datetime.now()
     return now.hour == hour and now.minute == minute
-
-def check_time_of_day(hour):
-    now = datetime.now()
-    logging.debug(f"{now.hour} : {hour}")
-    return now.hour == hour
 
 
 def check_file_changed(file_path, last_modified=None):
@@ -95,6 +106,7 @@ def get_file_last_modified(file_path):
 
 def str_to_bool(value):
     return str(value).strip().lower() == "true"
+
 
 def get_date():
     return datetime.now(timezone.utc).strftime("%m / %d")
