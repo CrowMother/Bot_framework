@@ -1,0 +1,9 @@
+pandas
+schwabdev
+python-dotenv
+mysql-connector-python
+requests
+gspread
+google-auth
+pytest
+flake8
