@@ -33,14 +33,11 @@ pip install git+https://github.com/CrowMother/Bot_framework.git
 
 ## Usage
 
-This framework provides a structured approach to building bots. The main application code resides in the `Bot_App` directory, with source code in the `src` directory and tests in the `tests` directory. To get started, navigate to the `Bot_App` directory and run the main application file:
+This framework provides a structured approach to building bots. The source code lives in the `src` directory and tests in the `tests` directory. An example entry point is provided in `src/Bot_App/main.py`. After installing the package (or setting `PYTHONPATH=src`), run it with:
 
 ```bash
-cd Bot_App
-python main.py
+python -m Bot_App.main
 ```
-
-Replace `main.py` with the actual entry point of your bot application.
 
 ## Contributing
 
@@ -53,4 +50,3 @@ This project is licensed under the MIT License. See the `LICENSE` file for more 
 ## Contact
 
 For questions or suggestions, please open an issue in this repository.
-``` 
