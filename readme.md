@@ -5,7 +5,13 @@ A Python library designed to facilitate the development of bots.
 
 ## Installation
 
-Choose one of the following methods to install the Bot Framework:
+Install the required dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Then choose one of the following methods to install the Bot Framework:
 
 **For local package installation:**
 
