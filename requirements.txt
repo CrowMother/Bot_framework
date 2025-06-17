@@ -1,0 +1,6 @@
+logging
+mysql-connector-python
+pandas
+schwabdev
+typing
+python-dotenv
