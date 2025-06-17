@@ -1,2 +1,16 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Test artifacts
+.pytest_cache/
+
+# Environment files
+.env
+
 tokens.json
-*.pyc
