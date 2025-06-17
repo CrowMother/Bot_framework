@@ -190,24 +190,23 @@ def check_time_of_day(hour, minute=0):
     
 
 def check_file_changed(file_path, last_modified=None):
-    """
-    Checks if the file has been modified since the last time it was checked.
+    """Return ``True`` if ``file_path`` was modified after ``last_modified``.
 
-    Args:
-        file_path: str, the path to the file to check.
-        last_modified: datetime, the last time the file was modified. Defaults to None."
-        "    
-    Returns:
-        bool: True if the file has been modified, False otherwise.
+    If ``last_modified`` is ``None`` the function always returns ``True``. Any
+    exception while obtaining the modification time is logged and ``False`` is
+    returned.
     """
     try:
-        stat = get_file_last_modified(file_path)
-        if last_modified is None or stat.st_mtime > last_modified:
-            return True
-        else:
+        mtime = get_file_last_modified(file_path)
+        if mtime is None:
+            logging.error(f"Error checking file {file_path}")
             return False
-    except Exception as e:
+        if last_modified is None or mtime > last_modified:
+            return True
+        return False
+    except Exception as e:  # pragma: no cover - defensive
         logging.error(f"Error checking file {file_path}: {e}")
+        return False
 
 def get_file_last_modified(file_path):
     """
@@ -222,8 +221,9 @@ def get_file_last_modified(file_path):
     try:
         stat = os.stat(file_path)
         return stat.st_mtime
-    except Exception as e:
-        logging.error(f"Error getting last modified time of file {file_path}: {e}")
+    except Exception:
+        # Caller will handle logging to avoid duplicate log entries during tests
+        return None
 
 def flatten_dict(d: Dict, parent_key: str = '', sep: str = '.') -> Dict:
     items = []
