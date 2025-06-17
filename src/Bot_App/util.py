@@ -201,29 +201,19 @@ def check_file_changed(file_path, last_modified=None):
         bool: True if the file has been modified, False otherwise.
     """
     try:
-        stat = get_file_last_modified(file_path)
-        if last_modified is None or stat.st_mtime > last_modified:
+        mtime = get_file_last_modified(file_path)
+        if last_modified is None or mtime > last_modified:
             return True
         else:
             return False
     except Exception as e:
         logging.error(f"Error checking file {file_path}: {e}")
+        return False
 
 def get_file_last_modified(file_path):
-    """
-    Returns the last modified time of the file.
-
-    Args:
-        file_path: str, the path to the file to check.
-
-    Returns:
-        datetime, the last modified time of the file.
-    """
-    try:
-        stat = os.stat(file_path)
-        return stat.st_mtime
-    except Exception as e:
-        logging.error(f"Error getting last modified time of file {file_path}: {e}")
+    """Return the last modified timestamp of the file."""
+    stat = os.stat(file_path)
+    return stat.st_mtime
 
 def flatten_dict(d: Dict, parent_key: str = '', sep: str = '.') -> Dict:
     items = []

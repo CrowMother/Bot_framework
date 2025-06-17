@@ -5,7 +5,7 @@ import os
 import logging
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def raw_data_to_sql(data: List[Dict], db_name: str = "./test.db"):
     os.makedirs(os.path.dirname(db_name), exist_ok=True)
@@ -44,7 +44,7 @@ def initialize_db(db_path="orders.db", drop_table=False):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     if drop_table:
-        logging.info("Dropping table 'schwab_orders' if it exists.")
+        logger.info("Dropping table 'schwab_orders' if it exists.")
         cursor.execute("""DROP TABLE IF EXISTS schwab_orders;""")
     # check if table exists
     cursor.execute("""
@@ -80,4 +80,5 @@ def initialize_db(db_path="orders.db", drop_table=False):
 
 
 if __name__ == "__main__":
+    util.setup_logging()
     initialize_db()

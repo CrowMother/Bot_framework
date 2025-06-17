@@ -4,14 +4,14 @@ from . import util
 
 from . import data
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class Schwab_client():
     def __init__(self, account, secret):
         self.client = create_client(account, secret)
 
     def say_hello(self):
-        logging.debug("Hello from Schwab_client!")
+        logger.debug("Hello from Schwab_client!")
 
     def get_account_positions(self, filter=None, hours=1):
         orders = None
@@ -31,15 +31,15 @@ class Schwab_client():
                 orders = response.json()
                 return orders
             else:
-                logging.error(f"Error getting account positions: {response} \n {from_date_str} \n {to_date_str}")
+                logger.error(f"Error getting account positions: {response} \n {from_date_str} \n {to_date_str}")
                 return None
             
         except Exception as e:
-            logging.error(f"Error getting account positions: {e} response: {response}")
+            logger.error(f"Error getting account positions: {e} response: {response}")
             return None
 
 def create_client(app_key, app_secret):
-    logging.debug("Initializing Schwabdev client")
+    logger.debug("Initializing Schwabdev client")
     return schwabdev.Client(app_key, app_secret)
 
 

@@ -5,13 +5,12 @@ import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
-import logging
 import os
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
           'https://www.googleapis.com/auth/drive']
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Look into refactoring this into a class for better encapsulation
 
@@ -25,13 +24,13 @@ def insert_data(worksheet, location, data):
         data (list of lists): 2D array of data to insert into the worksheet.
     """
     try:
-        logging.info("Attempting to update Google Sheet")
+        logger.info("Attempting to update Google Sheet")
         worksheet.update(location, data)
-        logging.info("Google Sheet updated successfully")
+        logger.info("Google Sheet updated successfully")
     except gspread.exceptions.APIError as e:
-        logging.error(f"API error occurred: {e.response.text}")
+        logger.error(f"API error occurred: {e.response.text}")
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 def get_next_empty_row(worksheet, column):
     """
@@ -47,14 +46,14 @@ def get_next_empty_row(worksheet, column):
     try:
         # Fetch all values in the specified column
         values = worksheet.col_values(column)
-        logging.info(f"Values in column {column}: {values}")
+        logger.info(f"Values in column {column}: {values}")
 
         # Find the index of the first empty cell in the column
         empty_index = len(values) + 1
-        logging.info(f"Next empty row in column {column}: {empty_index}")
+        logger.info(f"Next empty row in column {column}: {empty_index}")
         return empty_index
     except Exception as e:
-        logging.error(f"An error occurred while getting the next empty row: {e}")
+        logger.error(f"An error occurred while getting the next empty row: {e}")
         return None
     
 def get_all_records(worksheet):
@@ -74,20 +73,20 @@ def get_all_records(worksheet):
 
     try:
         # Fetch the header row
-        logging.info("Fetching header row from Google Sheet")
+        logger.info("Fetching header row from Google Sheet")
         headers = worksheet.row_values(1)
-        logging.info(f"Headers: {headers}")
+        logger.info(f"Headers: {headers}")
 
         # Fetch data into a Pandas DataFrame
-        logging.info("Fetching data from Google Sheet")
+        logger.info("Fetching data from Google Sheet")
         data = worksheet.get_all_records(expected_headers=headers)
         df = pd.DataFrame(data)
-        logging.info(f"Data fetched:\n{df}")
+        logger.info(f"Data fetched:\n{df}")
         return df
     except gspread.exceptions.APIError as e:
-        logging.error(f"API error occurred: {e.response.text}")
+        logger.error(f"API error occurred: {e.response.text}")
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 def connect_gsheets_account(file_path):
     """
@@ -110,13 +109,13 @@ def connect_gsheets_account(file_path):
     """
     try:
         # Authenticate using the service account key file
-        logging.info("Authenticating with Google Sheets API")
+        logger.info("Authenticating with Google Sheets API")
         credentials = Credentials.from_service_account_file(
             file_path, scopes=SCOPES)
         client = gspread.authorize(credentials)
         return client
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 def copy_headers(worksheet, location):
     # Use the inbuilt gsheet function to set the value at a given row and column to the headers
@@ -137,7 +136,7 @@ def copy_headers(worksheet, location):
         value_input_option='USER_ENTERED'
     )
     except gspread.exceptions.APIError as e:
-        logging.error(f"API error occurred: {e.response.text}")
+        logger.error(f"API error occurred: {e.response.text}")
 
 def connect_to_sheet(client, spreadsheet_name, worksheet_name):
     """
@@ -157,13 +156,13 @@ def connect_to_sheet(client, spreadsheet_name, worksheet_name):
 
     try:
         # Open the Google Sheet
-        logging.info("Opening Google Sheet")
+        logger.info("Opening Google Sheet")
         spreadsheet = client.open(spreadsheet_name)
         worksheet = spreadsheet.worksheet(worksheet_name)
-        logging.info(f"Worksheet title: {worksheet.title}")
+        logger.info(f"Worksheet title: {worksheet.title}")
         return worksheet
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 def format_data(pair):
     """
@@ -214,7 +213,7 @@ def format_data(pair):
         ]
 
     except Exception as e:
-        logging.error(f"An error occurred in format_data: {e}")
+        logger.error(f"An error occurred in format_data: {e}")
         return ["ERROR", "", "", "", ""]
 
 
@@ -262,7 +261,7 @@ def pair_orders(orders):
                         grouped[instrument_id]["close"] = order
 
         except Exception as e:
-            logging.error(f"Error in pairing logic: {e}")
+            logger.error(f"Error in pairing logic: {e}")
 
     # Filter for complete pairs
     for instrument_id, orders in grouped.items():
@@ -293,7 +292,7 @@ def write_row_at_next_empty_row(worksheet, row_data):
         row = f"B{row}"
         insert_data(worksheet, row, [row_data])
     except Exception as e:
-        logging.error(f"An error occurred writing row_data to Google Sheet: {e}")
+        logger.error(f"An error occurred writing row_data to Google Sheet: {e}")
     
 def create_id(order):
     """

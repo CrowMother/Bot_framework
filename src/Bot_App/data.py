@@ -10,7 +10,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 @dataclass
 class trade:
@@ -91,7 +91,7 @@ def parse_option_description(description, position):
             raise ValueError("Description format is invalid")
 
     except Exception as e:
-        logging.error(f"Error in parse_option_description: {e}")
+        logger.error(f"Error in parse_option_description: {e}")
         return "N/A"
     
 

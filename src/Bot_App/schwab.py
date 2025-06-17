@@ -5,7 +5,7 @@ import hashlib
 
 from . import data
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class Schwab_client():
@@ -13,7 +13,7 @@ class Schwab_client():
         self.client = create_client(account, secret)
 
     def say_hello(self):
-        logging.debug("Hello from Schwab_client!")
+        logger.debug("Hello from Schwab_client!")
 
     def get_account_positions(self, filter=None, hours=1):
         def fetch_orders():
@@ -25,13 +25,13 @@ class Schwab_client():
         if response is not None and response.status_code == 200:
             return response.json()
         else:
-            logging.error(f"Failed to get account positions after retries. Response: {response}")
+            logger.error(f"Failed to get account positions after retries. Response: {response}")
             return None
 
 
 
 def create_client(app_key, app_secret):
-    logging.debug("Initializing Schwabdev client")
+    logger.debug("Initializing Schwabdev client")
     return schwabdev.Client(app_key, app_secret)
 
 def split_description(order):
@@ -44,7 +44,7 @@ def split_description(order):
         return order
     
     except Exception as e:
-        logging.error(f"Error formatting description: {e}")
+        logger.error(f"Error formatting description: {e}")
         return
 
 
@@ -109,6 +109,6 @@ def extract_and_normailze_legs(order):
         return legs
 
     except Exception as e:
-        logging.error(f"Error extracting and normalizing legs: {e}")
+        logger.error(f"Error extracting and normalizing legs: {e}")
         return []
     

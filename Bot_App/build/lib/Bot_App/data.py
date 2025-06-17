@@ -5,7 +5,7 @@ import logging
 from . import util
 import re
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def get_value_from_data(data, target_key):
     """
