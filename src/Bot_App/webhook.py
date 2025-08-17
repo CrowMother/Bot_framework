@@ -8,11 +8,12 @@ from . import data
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, suffix=""):
-    content = format_discord_message(order_json, suffix)
+def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, role=""):
+    content = format_discord_message(order_json)
     payload = {
         "channel": DISCORD_CHANNEL_ID,
-        "content": content
+        "content": content,
+        "role": role
     }
 
     def do_post():
