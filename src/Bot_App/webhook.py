@@ -9,7 +9,7 @@ from . import data
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, role="something"):
-    content = format_discord_message(order_json)
+    content = format_discord_message(order_json,DISCORD_CHANNEL_ID)
     payload = {
         "channel": DISCORD_CHANNEL_ID,
         "content": content,
@@ -23,7 +23,7 @@ def post_to_discord(order_json, DISCORD_WEBHOOK_URL, DISCORD_CHANNEL_ID, role="s
     return response is not None and (response.status_code == 204 or response.status_code == 200)
 
 
-def format_discord_message(order, suffix=""):
+def format_discord_message(order, channel_id= "", suffix=""):
     legs = order.get("orderLegCollection", [])
     price = order.get("price", "?")
     position_effects = []
@@ -58,6 +58,7 @@ def format_discord_message(order, suffix=""):
     body = "\n".join(leg_lines)
 
     gain_line = ""
+
     if any("closing" in pe.lower() or "closed" in pe.lower() for pe in position_effects):
         if opening_order:
             open_price = extract_execution_price(opening_order)
@@ -65,12 +66,12 @@ def format_discord_message(order, suffix=""):
                 pct_change = ((price - open_price) / open_price) * 100
                 emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend:"
                 gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
-
-    if suffix == "":
-        return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
-    else:
-        return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
-
+    if channel_id == "1220834944767492246":
+        if suffix == "":
+            return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
+        else:
+            return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
+    return f"{body}\n@ ${price} *{effect_summary}\n{suffix}"
 
 def sizing_order(total_qty, quantity):
     if total_qty <= 1:
@@ -80,7 +81,6 @@ def sizing_order(total_qty, quantity):
     else:
         size = (quantity / total_qty) * 100
         return f" ({size:.0f}%)"
-
 
 def get_total_quantity(order):
     legs = order.get("orderLegCollection", [])
