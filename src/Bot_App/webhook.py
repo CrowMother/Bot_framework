@@ -71,7 +71,7 @@ def format_discord_message(order, channel_id= "", suffix=""):
             return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
         else:
             return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
-    return f"{body}\n@ ${price} *{effect_summary}\n{suffix}"
+    return f"{body}\n@ ${price} *{effect_summary}*\n{suffix}"
 
 def sizing_order(total_qty, quantity):
     if total_qty <= 1:
