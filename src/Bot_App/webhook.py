@@ -63,7 +63,8 @@ def format_discord_message(order, channel_id= "", suffix=""):
         if opening_order:
             open_price = extract_execution_price(opening_order)
             if open_price and price:
-                pct_change = ((price - open_price) / open_price) * 100
+                price = float(price)
+                pct_change = (( - open_price) / open_price) * 100
                 emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend:"
                 gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
     if channel_id != "1220834944767492246":
