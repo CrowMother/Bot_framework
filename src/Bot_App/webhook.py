@@ -75,7 +75,7 @@ def format_discord_message(order, channel_id= "", suffix=""):
                     return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
             return f"{body}\n@ ${price} *{effect_summary}*\n{suffix}"
         except Exception as e:
-            return f"Error:{e}"
+            return f"{body}\n@ *{effect_summary}*{gain_line}\n{suffix}"
 
 def sizing_order(total_qty, quantity):
     if total_qty <= 1:
@@ -135,7 +135,12 @@ def extract_execution_price(order):
     if activities:
         legs = activities[0].get("executionLegs", [])
         if legs:
-            return float(legs[0].get("price", 0))
+            try:
+                price = float(legs[0].get("price", 0))
+                price = price * 1
+                return price
+            except Exception as e:
+                return None
     return None
 
 def extract_quantity(order):
