@@ -1,6 +1,6 @@
 logging
 mysql-connector-python
 pandas
-schwabdev
+schwabdev==2.5.1
 typing
 python-dotenv
