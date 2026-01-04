@@ -60,22 +60,19 @@ def format_discord_message(order, channel_id= "", suffix=""):
     gain_line = ""
 
     if any("closing" in pe.lower() or "closed" in pe.lower() for pe in position_effects):
-        try:
-            if opening_order:
-                open_price = extract_execution_price(opening_order)
-                if open_price and price:
-                    price = float(price)
-                    pct_change = (( - open_price) / open_price) * 100
-                    emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend:"
-                    gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
-            if channel_id != "1220834944767492246":
-                if suffix == "":
-                    return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
-                else:
-                    return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
-            return f"{body}\n@ ${price} *{effect_summary}*\n{suffix}"
-        except Exception as e:
-            return f"{body}\n@ *{effect_summary}*{gain_line}\n{suffix}"
+        if opening_order:
+            open_price = extract_execution_price(opening_order)
+            if open_price and price:
+                price = float(price)
+                pct_change = (( - open_price) / open_price) * 100
+                emoji = ":chart_with_upwards_trend:" if pct_change >= 0 else ":chart_with_downwards_trend:"
+                gain_line = f"\n{emoji} **{pct_change:+.2f}%** vs open"
+        if channel_id != "1220834944767492246":
+            if suffix == "":
+                return f"{body}\n@ ${price} *{effect_summary}*{gain_line}"
+            else:
+                return f"{body}\n@ ${price} *{effect_summary}*{gain_line}\n{suffix}"
+        return f"{body}\n@ ${price} *{effect_summary}*\n{suffix}"
 
 def sizing_order(total_qty, quantity):
     if total_qty <= 1:
@@ -135,12 +132,9 @@ def extract_execution_price(order):
     if activities:
         legs = activities[0].get("executionLegs", [])
         if legs:
-            try:
                 price = float(legs[0].get("price", 0))
                 price = price * 1
                 return price
-            except Exception as e:
-                return None
     return None
 
 def extract_quantity(order):
